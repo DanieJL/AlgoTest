@@ -18,7 +18,7 @@ public class Main {
 }
 
 //TODO: stuff
-//Store BOT key/channel ID/files/binance key more smarterly
+//Store BOT key/channel ID/files locations/binance key more smarterly
 //Implement actual trading
 //Implement tradeConfirm()
 //Put into GIT
