@@ -8,7 +8,6 @@ import org.apache.log4j.Logger;
 import org.json.JSONObject;
 
 import java.io.*;
-import java.net.URISyntaxException;
 import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -19,12 +18,11 @@ import java.util.List;
 import java.util.prefs.Preferences;
 
 public class Market {
+    private final static Logger LOGGER = Logger.getLogger(Market.class);
     private static final DecimalFormat df = new DecimalFormat("#.###");
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy hh:mm a");
     private static final DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("hh:mm a");
     private String[] allowedTickers;
-
-    private final static Logger LOGGER = Logger.getLogger(Market.class);
 
     private final double trailingPercentBase = 2;   //the percent you want the stop loss trail to start at
 
@@ -55,7 +53,7 @@ public class Market {
                     buyNew(findNew());
                 }
             } else {
-                LOGGER.info("   -Holding " + coinSymbol + ": " + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%) [Paid: " + coinValuePaid + " Trail: " + df.format(trailingStopValue) + "] (" + trailingPercent + "%)");
+                LOGGER.info("Holding " + coinSymbol + ": " + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%) [Paid: " + coinValuePaid + " Trail: " + df.format(trailingStopValue) + "] (" + trailingPercent + "%)");
                 if(updateCycleCounter <1) {
                     Main.UPDATER.sendUpdateMsg("```(" + d + ") " + coinSymbol + ": " + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%)```");
                     updateCycleCounter = 60/Main.CYCLE_TIME; //only send discord updates every minute
@@ -104,12 +102,12 @@ public class Market {
             allowedTickers = list.toArray(new String[0]);
             br.close();
         } catch (Exception e) {
-            LOGGER.error("Error reading allowed coins file.");
+            LOGGER.error("Error reading allowed coins file. Error: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    private static String makeAPICall(String url) throws URISyntaxException, IOException {
+    private static String makeAPICall(String url) throws IOException {
         String response_content;
 
         CloseableHttpClient client = HttpClients.createDefault();
@@ -137,8 +135,9 @@ public class Market {
                 updateCurrent();
                 trailingStopValue = (coinValue - ((trailingPercentBase / 100.0) * coinValue));
                 updateCurrent();
-                LOGGER.info("   -Bought " + coinSymbol + " at $" + coinValue + " [https://www.binance.us/en/trade/pro/" + coinSymbol + "]");
-                Main.UPDATER.sendUpdateMsg("Bought " + coinSymbol + " at $" + coinValue + " [https://www.binance.us/en/trade/pro/" + coinSymbol + "]");
+                String message = "Bought " + coinSymbol + " at $" + coinValue + " [https://www.binance.us/en/trade/pro/" + coinSymbol + "]";
+                LOGGER.info(message);
+                Main.UPDATER.sendUpdateMsg(message);
             }
         }
         saveCurrentValues();
@@ -175,16 +174,15 @@ public class Market {
             }
         } catch(IOException e){
             LOGGER.error("Error: cannot access content - " + e.toString());
-        } catch(URISyntaxException e){
-            LOGGER.error("Error: Invalid URL " + e.toString());
         }
     }
 
     public void sellCurrent() {
         //SELL CODE GOES HERE
         if(tradeConfirm("")) {
-            LOGGER.info("   -Sold " + coinSymbol + " at $" + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%)");
-            Main.UPDATER.sendUpdateMsg("Sold " + coinSymbol + " at $" + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%)");
+            String message = "Sold " + coinSymbol + " at $" + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%)";
+            LOGGER.info(message);
+            Main.UPDATER.sendUpdateMsg(message);
 
             String d = LocalDateTime.now().format(formatter);
             try {
@@ -194,7 +192,7 @@ public class Market {
                 fw.write("(" + d + ") Sold " + coinSymbol + " (" + df.format(coinPercentChange) + "%)");
                 fw.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                LOGGER.error("Failed to write to sellLog. Error: " + e.getMessage());
             }
             lastSymbol = coinSymbol;
             coinValue = 0;
