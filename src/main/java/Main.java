@@ -19,10 +19,13 @@ public class Main {
 
 //TODO: stuff
 //Store BOT key/channel ID/files locations/binance key more smarterly
+//-- ConfigHandler added for this, add bot.config to resources folder
+//--format is key=value
+
 //Implement actual trading
 //Implement tradeConfirm()
 //Put into GIT
-//Case do janitor work and clean up this stupid fucking retarded program
+//Case is awesome
 
 //**ALGO STUFF**
 //RSI seems off?
@@ -31,3 +34,5 @@ public class Main {
 //Implement sentiment scalping?
 //Filter for more recent volume requirements?
 //Limit gains per day? (stop trading after x% gain (or loss) on a day?)
+
+//Add fibonacci indicators as potential tool for the algo.
