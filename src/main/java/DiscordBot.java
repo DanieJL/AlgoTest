@@ -22,7 +22,7 @@ public class DiscordBot extends ListenerAdapter {
         try {
             channel = BOT.build().
                     awaitReady().
-                    getTextChannelById("discord.channel.id");
+                    getTextChannelById(ConfigHandler.getBotConfig("discord.channel.id"));
             LOGGER.info("Successfully logged into Discord.");
         } catch (LoginException | InterruptedException e) {
             LOGGER.error("UNABLE TO LOGIN.");
