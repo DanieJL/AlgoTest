@@ -12,7 +12,7 @@ import java.io.FileReader;
 import java.io.IOException;
 
 public class DiscordBot extends ListenerAdapter {
-    private TextChannel channel;
+    private TextChannel channel = null;
 
     private final static Logger LOGGER = Logger.getLogger(DiscordBot.class);
 

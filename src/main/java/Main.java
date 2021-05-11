@@ -1,5 +1,8 @@
+import java.util.Arrays;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.stream.Collectors;
 
 public class Main {
     public static final int CYCLE_TIME = 15;     //run the market test every X seconds
@@ -13,7 +16,6 @@ public class Main {
                 MOGUL.MarketBot();
             }
         }, 0, 1000L * CYCLE_TIME); //60000 * MINUTES
-
     }
 }
 

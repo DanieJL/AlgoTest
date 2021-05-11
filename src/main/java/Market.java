@@ -12,11 +12,10 @@ import java.io.*;
 import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+
 import java.util.prefs.Preferences;
+import java.util.stream.Collectors;
 
 import static java.lang.Math.abs;
 
@@ -38,10 +37,16 @@ public class Market {
     private double trailingStopValue = 0;
     private double trailingPercent = trailingPercentBase;
 
-    Market(){loadCurrentValues();}
-    public String getCoinSymbol() {return coinSymbol;}
+    Market() {
+        loadCurrentValues();
+    }
+
+    public String getCoinSymbol() {
+        return coinSymbol;
+    }
 
     private int updateCycleCounter = 1;
+
     public void MarketBot() {
         String d = LocalDateTime.now().format(formatter2);
         LOGGER.info("\nRan test at " + d);
@@ -57,11 +62,12 @@ public class Market {
                 }
             } else {
                 LOGGER.info("Holding " + coinSymbol + ": " + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%) [Paid: " + coinValuePaid + " Trail: " + df.format(trailingStopValue) + "] (" + trailingPercent + "%)");
-                if(updateCycleCounter <1) {
+                if (updateCycleCounter < 1) {
                     Main.UPDATER.sendUpdateMsg("```(" + d + ") " + coinSymbol + ": " + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%)```");
-                    updateCycleCounter = 60/Main.CYCLE_TIME; //only send discord updates every minute
+                    updateCycleCounter = 60 / Main.CYCLE_TIME; //only send discord updates every minute
                 } else {
-                    updateCycleCounter--;}
+                    updateCycleCounter--;
+                }
                 saveCurrentValues();
             }
         } else {
@@ -124,15 +130,60 @@ public class Market {
         return response_content;
     }
 
+    public List<Candlestick> getKlineData(String symbol, String interval) {
+        List<Candlestick> allCandlesticks = new ArrayList<>();
+
+        String startTime = "1604221113";
+        String url = "https://api.binance.us/api/v3/klines?symbol=" + symbol + "&interval=" + interval + "&limit=1000"; // + "&startTime=" + startTime;
+
+        while (true) {
+            if (!allCandlesticks.isEmpty()) {
+                url = "https://api.binance.us/api/v3/klines?symbol=" + symbol + "&interval=" + interval + "&limit=1000" + "&startTime=" + allCandlesticks.get(allCandlesticks.size() - 1).getOpenTime();
+            }
+
+            JSONArray data = new JSONArray();
+            try {
+                data = new JSONArray(makeAPICall(url));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            List<Candlestick> candlesticks = new ArrayList<>();
+
+            for (int i = 0; i < data.length(); i++) {
+                JSONArray stick = data.getJSONArray(i);
+                candlesticks.add(new Candlestick(stick.getLong(0),
+                        Double.parseDouble(stick.getString(1)),
+                        Double.parseDouble(stick.getString(4))));
+            }
+            allCandlesticks.addAll(candlesticks);
+            break;
+//            if (candlesticks.size() < 999) {
+//                break;
+//            }
+        }
+
+
+
+        return allCandlesticks;
+    }
+
+    private long getDateDeltaUnix(int days) {
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DATE, days);
+
+        return cal.getTime().getTime();
+    }
+
     /*ALGO GOES HERE*/
-    private String findNew(){
-        return "DOGEUSD";
+    public String findNew() {
+        return "DOGECOIN";
     }
 
     private void buyNew(String newTicker) {
-        if(!newTicker.equals("")) {
+        if (!newTicker.equals("")) {
             //BUY CODE GOES HERE
-            if(tradeConfirm(newTicker)) {
+            if (tradeConfirm(newTicker)) {
                 coinSymbol = newTicker;
                 trailingPercent = trailingPercentBase;
                 updateCurrent();
@@ -155,19 +206,20 @@ public class Market {
                 String key = (String) it.next();
                 if (key.equals("price")) {
                     coinValue = data.getDouble(key);
-                    if(coinValuePaid == 0){
-                        coinValuePaid = coinValue;}
-                    coinPercentChange = ((100/ coinValuePaid) * coinValue)-100;
+                    if (coinValuePaid == 0) {
+                        coinValuePaid = coinValue;
+                    }
+                    coinPercentChange = ((100 / coinValuePaid) * coinValue) - 100;
                     break;
                 }
             }
             if (coinValue > coinValuePeak) {
                 coinValuePeak = coinValue;
-                trailingPercent =  trailingPercentBase;
-                if(coinPercentChange>.6){                                             //at .6% gain, set trail down to .5%
+                trailingPercent = trailingPercentBase;
+                if (coinPercentChange > .6) {                                             //at .6% gain, set trail down to .5%
                     trailingPercent = .5;
                 }
-                if(coinPercentChange>1) {                                             //trail stays at .5% until 1% gain
+                if (coinPercentChange > 1) {                                             //trail stays at .5% until 1% gain
                     trailingPercent += (coinPercentChange - 1) * .1;                 //trail grows .1% for each addition 1% gain
                     if (trailingPercent > 3) {
                         trailingPercent = 3;
@@ -175,14 +227,14 @@ public class Market {
                 }
                 trailingStopValue = (coinValuePeak - ((trailingPercent / 100.0) * coinValuePeak));
             }
-        } catch(IOException e){
+        } catch (IOException e) {
             LOGGER.error("Error: cannot access content - " + e.toString());
         }
     }
 
     public void sellCurrent() {
         //SELL CODE GOES HERE
-        if(tradeConfirm("")) {
+        if (tradeConfirm("")) {
             String message = "Sold " + coinSymbol + " at $" + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%)";
             LOGGER.info(message);
             Main.UPDATER.sendUpdateMsg(message);
@@ -191,7 +243,9 @@ public class Market {
             try {
                 File file = new File("sellLog.txt");
                 FileWriter fw = new FileWriter(file, true);
-                if(file.length()!=0){fw.write("\n");}
+                if (file.length() != 0) {
+                    fw.write("\n");
+                }
                 fw.write("(" + d + ") Sold " + coinSymbol + " (" + df.format(coinPercentChange) + "%)");
                 fw.close();
             } catch (IOException e) {
@@ -209,7 +263,7 @@ public class Market {
         }
     }
 
-    private boolean tradeConfirm(String s){
+    private boolean tradeConfirm(String s) {
      /*  boolean confirmed = false;
        if(s.equals("")){
             confirm it sold
