@@ -18,6 +18,7 @@ public class Main {
 }
 
 //TODO: stuff
+
 //Store BOT key/channel ID/files locations/binance key more smarterly
 //-- ConfigHandler added for this, add bot.config to resources folder
 //--format is key=value
@@ -35,4 +36,5 @@ public class Main {
 //Filter for more recent volume requirements?
 //Limit gains per day? (stop trading after x% gain (or loss) on a day?)
 
-//Add fibonacci indicators as potential tool for the algo.
+//have multiple market objects running different variables see how each perform.
+

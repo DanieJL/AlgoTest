@@ -5,6 +5,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.*;
@@ -14,8 +15,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
+import java.util.concurrent.TimeUnit;
 import java.util.prefs.Preferences;
+
+import static java.lang.Math.abs;
 
 public class Market {
     private final static Logger LOGGER = Logger.getLogger(Market.class);
