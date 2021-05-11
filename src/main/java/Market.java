@@ -4,11 +4,11 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.*;
-import java.net.URISyntaxException;
 import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -21,6 +21,7 @@ import java.util.prefs.Preferences;
 import static java.lang.Math.abs;
 
 public class Market {
+    private final static Logger LOGGER = Logger.getLogger(Market.class);
     private static final DecimalFormat df = new DecimalFormat("#.###");
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy hh:mm a");
     private static final DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("hh:mm a");
@@ -43,7 +44,7 @@ public class Market {
     private int updateCycleCounter = 1;
     public void MarketBot() {
         String d = LocalDateTime.now().format(formatter2);
-        System.out.println("\nRan test at " + d);
+        LOGGER.info("\nRan test at " + d);
 
         if (coinSymbol.length() != 0) {
             updateCurrent();
@@ -55,7 +56,7 @@ public class Market {
                     buyNew(findNew());
                 }
             } else {
-                System.out.println("   -Holding " + coinSymbol + ": " + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%) [Paid: " + coinValuePaid + " Trail: " + df.format(trailingStopValue) + "] (" + trailingPercent + "%)");
+                LOGGER.info("Holding " + coinSymbol + ": " + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%) [Paid: " + coinValuePaid + " Trail: " + df.format(trailingStopValue) + "] (" + trailingPercent + "%)");
                 if(updateCycleCounter <1) {
                     Main.UPDATER.sendUpdateMsg("```(" + d + ") " + coinSymbol + ": " + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%)```");
                     updateCycleCounter = 60/Main.CYCLE_TIME; //only send discord updates every minute
@@ -95,7 +96,7 @@ public class Market {
 
         /*Load list of allowed coins into array*/
         try {
-            BufferedReader br = new BufferedReader(new FileReader("c:\\Users\\Shaftspin\\Desktop\\IntelliJ\\IntelliJ IDEA Community Edition 2020.3.3\\AlgoTest\\allowed.txt"));
+            BufferedReader br = new BufferedReader(new FileReader("allowed.txt"));
             String str;
             List<String> list = new ArrayList<>();
             while ((str = br.readLine()) != null) {
@@ -104,11 +105,12 @@ public class Market {
             allowedTickers = list.toArray(new String[0]);
             br.close();
         } catch (Exception e) {
+            LOGGER.error("Error reading allowed coins file. Error: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    private static String makeAPICall(String url) throws URISyntaxException, IOException {
+    private static String makeAPICall(String url) throws IOException {
         String response_content;
 
         CloseableHttpClient client = HttpClients.createDefault();
@@ -136,8 +138,9 @@ public class Market {
                 updateCurrent();
                 trailingStopValue = (coinValue - ((trailingPercentBase / 100.0) * coinValue));
                 updateCurrent();
-                System.out.println("   -Bought " + coinSymbol + " at $" + coinValue + " [https://www.binance.us/en/trade/pro/" + coinSymbol + "]");
-                Main.UPDATER.sendUpdateMsg("Bought " + coinSymbol + " at $" + coinValue + " [https://www.binance.us/en/trade/pro/" + coinSymbol + "]");
+                String message = "Bought " + coinSymbol + " at $" + coinValue + " [https://www.binance.us/en/trade/pro/" + coinSymbol + "]";
+                LOGGER.info(message);
+                Main.UPDATER.sendUpdateMsg(message);
             }
         }
         saveCurrentValues();
@@ -173,27 +176,26 @@ public class Market {
                 trailingStopValue = (coinValuePeak - ((trailingPercent / 100.0) * coinValuePeak));
             }
         } catch(IOException e){
-            System.out.println("Error: cannot access content - " + e.toString());
-        } catch(URISyntaxException e){
-            System.out.println("Error: Invalid URL " + e.toString());
+            LOGGER.error("Error: cannot access content - " + e.toString());
         }
     }
 
     public void sellCurrent() {
         //SELL CODE GOES HERE
         if(tradeConfirm("")) {
-            System.out.println("   -Sold " + coinSymbol + " at $" + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%)");
-            Main.UPDATER.sendUpdateMsg("Sold " + coinSymbol + " at $" + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%)");
+            String message = "Sold " + coinSymbol + " at $" + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%)";
+            LOGGER.info(message);
+            Main.UPDATER.sendUpdateMsg(message);
 
             String d = LocalDateTime.now().format(formatter);
             try {
-                File file = new File("c:\\Users\\Shaftspin\\Desktop\\IntelliJ\\IntelliJ IDEA Community Edition 2020.3.3\\AlgoTest\\sellLog.txt");
+                File file = new File("sellLog.txt");
                 FileWriter fw = new FileWriter(file, true);
                 if(file.length()!=0){fw.write("\n");}
                 fw.write("(" + d + ") Sold " + coinSymbol + " (" + df.format(coinPercentChange) + "%)");
                 fw.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                LOGGER.error("Failed to write to sellLog. Error: " + e.getMessage());
             }
             lastSymbol = coinSymbol;
             coinValue = 0;
@@ -235,13 +237,13 @@ public class Market {
                     FileWriter fw = new FileWriter(filename, true);
                     fw.write("\n" + testTicker);
                     fw.close();
-                    System.out.println(testTicker + " added to list.");
+                    LOGGER.info(testTicker + " added to list.");
                 }
             }
         } catch (IOException e) {
-            System.out.println("Error: cannot access content - " + e.toString());
+            LOGGER.error("Error: cannot access content - " + e.toString());
         } catch (URISyntaxException e) {
-            System.out.println("Error: Invalid URL " + e.toString());
+            LOGGER.error("Error: Invalid URL " + e.toString());
         }
         return;
     }*/

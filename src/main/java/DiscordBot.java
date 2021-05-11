@@ -2,6 +2,8 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.apache.log4j.Logger;
+import util.ConfigHandler;
 
 import javax.security.auth.login.LoginException;
 import java.io.BufferedReader;
@@ -12,14 +14,18 @@ import java.io.IOException;
 public class DiscordBot extends ListenerAdapter {
     private TextChannel channel;
 
+    private final static Logger LOGGER = Logger.getLogger(DiscordBot.class);
+
     DiscordBot() {
-        JDABuilder BOT = JDABuilder.createDefault("ODM5NzMyMDYwNDQ0NDI2MjUw.YJN7bA.ERRfPU_OyXFjqW3DXuUB0I0Gj5o");
+        JDABuilder BOT = JDABuilder.createDefault(ConfigHandler.getBotConfig("discord.token"));
         BOT.addEventListeners(this);
         try {
-            channel = BOT.build().awaitReady().getTextChannelById("827394686065836076");
-
+            channel = BOT.build().
+                    awaitReady().
+                    getTextChannelById(ConfigHandler.getBotConfig("discord.channel.id"));
+            LOGGER.info("Successfully logged into Discord.");
         } catch (LoginException | InterruptedException e) {
-            System.err.println("UNABLE TO LOGIN.");
+            LOGGER.error("UNABLE TO LOGIN.");
         }
     }
 
@@ -51,7 +57,7 @@ public class DiscordBot extends ListenerAdapter {
             }
         }
         if(messageText.equals("!data")) {
-            File file = new File("c:\\Users\\Shaftspin\\Desktop\\IntelliJ\\IntelliJ IDEA Community Edition 2020.3.3\\AlgoTest\\sellLog.txt");
+            File file = new File("sellLog.txt");
             try {
                 BufferedReader br = new BufferedReader(new FileReader(file));
                 String st;
