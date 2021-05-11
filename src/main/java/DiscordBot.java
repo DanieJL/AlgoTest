@@ -33,17 +33,17 @@ public class DiscordBot extends ListenerAdapter {
         if(messageText.equals("!ping")){
             event.getChannel().sendMessage("PONG BITCH!").queue();
             if(Main.MOGUL.getCoinSymbol().equals("")){
-                event.getChannel().sendMessage("Currently looking for a coin!").queue();
+                this.channel.sendMessage("Currently looking for a coin!").queue();
             }
         }
         if(messageText.equals("!quit") || messageText.equals("!shutdown") ){
-            event.getChannel().sendMessage("SHUTTING DOWN").queue();
+            this.channel.sendMessage("SHUTTING DOWN").queue();
             Main.MOGUL.saveCurrentValues();
             System.exit(0);
         }
         if(messageText.equals("!sell")){
             if(Main.MOGUL.getCoinSymbol().equals("")){
-                event.getChannel().sendMessage("You aren't holding anything to sell!").queue();
+                this.channel.sendMessage("You aren't holding anything to sell!").queue();
             }
             else{
                 Main.MOGUL.updateCurrent();
@@ -68,9 +68,9 @@ public class DiscordBot extends ListenerAdapter {
                 }
                 posAvg = posAvg/posCount;
                 negAvg = negAvg/negCount;
-                String data = count + " trades: " + total + "%\nAdjusted: " + (total-((count)*.2)) + "%\n\n" +
+                String data = count + " trades: " + total + "%\nAdjusted: " + (total-((count)*.15)) + "%\n\n" + //adjusted is assuming .075%x2 fee to buy and sell
                         posCount + " positive trades: " + posAvg + "%/avg\n" + negCount + " negative trades: " + negAvg + "%/avg";
-                event.getChannel().sendMessage(data).queue();
+                this.channel.sendMessage(data).queue();
             } catch (IOException e) {
                 e.printStackTrace();
             }

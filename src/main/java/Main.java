@@ -18,7 +18,7 @@ public class Main {
 }
 
 //TODO: stuff
-//Store BOT key/channel ID/files locations/binance key more smarterly
+//Store BOT key/channel ID/file locations/binance key more smarterly
 //Implement actual trading
 //Implement tradeConfirm()
 //Put into GIT
@@ -31,3 +31,7 @@ public class Main {
 //Implement sentiment scalping?
 //Filter for more recent volume requirements?
 //Limit gains per day? (stop trading after x% gain (or loss) on a day?)
+
+
+
+//have multiple market objects running different variables see how each perform.
