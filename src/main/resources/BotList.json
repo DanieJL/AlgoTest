@@ -1,0 +1,29 @@
+[
+  {
+    "name": "Bot1",
+    "algoName": "fib",
+    "persist": {
+      "lastTicker": "temporary",
+      "currentPaid": 0.0,
+      "trailingPercent": 2.0,
+      "currentTicker": "",
+      "currentPeak": 0.0,
+      "currentValue": 0.0,
+      "trailingStop": 0.0,
+      "currentPerChange": 0.0
+    }
+  },
+  {
+    "name": "Bot2",
+    "persist": {
+      "lastTicker": "temporary",
+      "currentPaid": 0.0,
+      "trailingPercent": 2.0,
+      "currentTicker": "",
+      "currentPeak": 0.0,
+      "currentValue": 0.0,
+      "trailingStop": 0.0,
+      "currentPerChange": 0.0
+    }
+  }
+]
