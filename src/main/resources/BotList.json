@@ -3,27 +3,27 @@
     "name": "Bot1",
     "algoName": "fib",
     "persist": {
-      "lastTicker": "PAXGUSD",
-      "currentPaid": 0.0164,
+      "lastTicker": "temporary",
+      "currentPaid": 0.0,
       "trailingPercent": 2.0,
-      "currentTicker": "VTHOUSD",
-      "currentPeak": 0.0164,
-      "currentValue": 0.0163,
-      "trailingStop": 0.016072000000000003,
-      "currentPerChange": -0.6097560975609895
+      "currentTicker": "",
+      "currentPeak": 0.0,
+      "currentValue": 0.0,
+      "trailingStop": 0.0,
+      "currentPerChange": 0.0
     }
   },
   {
     "name": "Bot2",
     "persist": {
-      "lastTicker": "BATUSD",
-      "currentPaid": 1.3993,
+      "lastTicker": "temporary",
+      "currentPaid": 0.0,
       "trailingPercent": 2.0,
-      "currentTicker": "BATUSD",
-      "currentPeak": 1.4021,
-      "currentValue": 1.3992,
-      "trailingStop": 1.374058,
-      "currentPerChange": -0.007146430358034195
+      "currentTicker": "",
+      "currentPeak": 0.0,
+      "currentValue": 0.0,
+      "trailingStop": 0.0,
+      "currentPerChange": 0.0
     }
   }
 ]

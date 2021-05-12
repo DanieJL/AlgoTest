@@ -29,10 +29,7 @@ public class Algorithms {
     }
 
     public String rsiGt60() {
-        System.out.println("Searching...");
-
         for (String ticker : allowedTickers) {
-            System.out.println(ticker);
             List<Candlestick> cStickDataForRSI = getKlineData(ticker, "4h");
             List<Candlestick> cStickDataForFIB = cStickDataForRSI
                     .stream()
@@ -40,31 +37,20 @@ public class Algorithms {
                     .collect(Collectors.toList());
             double[] rsiData = MarketUtil.calculateRSIValues(cStickDataForRSI, 14);
             double[] fibs = MarketUtil.calculateKeyFibRetracements(cStickDataForFIB);
-            if (rsiData[rsiData.length - 1] < 60) {
+            if (rsiData[rsiData.length - 1] < 30) {
                 double fib618 = fibs[2];
                 double lastClose = cStickDataForFIB.get(cStickDataForFIB.size() - 1).getClose();
                 double fibDiff = Math.abs(lastClose - fib618);
                 double fibDiffPercent = fibDiff / lastClose;
-                System.out.println("LAST CLOSE: " + lastClose);
-                System.out.println("FIB DIFF Percent: " + fibDiffPercent);
 
                 return ticker;
             }
-        }
-
-        try {
-            Thread.sleep(60000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
         return "";
     }
 
     public String fib618() {
-        System.out.println("Searching...");
-
         for (String ticker : allowedTickers) {
-            System.out.println(ticker);
             List<Candlestick> cStickDataForRSI = getKlineData(ticker, "4h");
             List<Candlestick> cStickDataForFIB = cStickDataForRSI
                     .stream()
@@ -75,18 +61,10 @@ public class Algorithms {
             double lastClose = cStickDataForFIB.get(cStickDataForFIB.size() - 1).getClose();
             double fibDiff = Math.abs(lastClose - fib618);
             double fibDiffPercent = fibDiff / lastClose;
-            System.out.println("LAST CLOSE: " + lastClose);
-            System.out.println("FIB DIFF Percent: " + fibDiffPercent);
 
-            if (fibDiffPercent <= .03) {
+            if (fibDiffPercent <= .02) {
                 return ticker;
             }
-        }
-
-        try {
-            Thread.sleep(60000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
         return "";
     }

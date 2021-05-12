@@ -69,12 +69,8 @@ public class Market {
         if (coinSymbol.length() != 0) {
             updateCurrent();
             if (coinValue < trailingStopValue) {
-                while (coinSymbol.length() != 0) {
-                    sellCurrent();
-                }
-                while (coinSymbol.length() == 0) {
-                    buyNew(findNew());
-                }
+                sellCurrent();
+                buyNew(findNew());
             } else {
                 LOGGER.info("Holding " + coinSymbol + ": " + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%) [Paid: " + coinValuePaid + " Trail: " + df.format(trailingStopValue) + "] (" + trailingPercent + "%)");
                 if (updateCycleCounter < 1) {
@@ -86,9 +82,7 @@ public class Market {
                 saveCurrentValues();
             }
         } else {
-            while (coinSymbol.length() == 0) {
-                buyNew(findNew());
-            }
+            buyNew(findNew());
         }
     }
 
