@@ -124,7 +124,7 @@ public class Market {
             //Write JSON file
             try (FileWriter file = new FileWriter(Main.botListFile)) {
                 //We can write any JSONArray or JSONObject instance to the file
-                file.write(marketJsonArr.toJSONString());
+                file.write(new JSONArray(marketJsonArr.toJSONString()).toString(4));
                 file.flush();
 
             } catch (IOException e) {

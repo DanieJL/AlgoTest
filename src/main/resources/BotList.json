@@ -1,29 +1,29 @@
 [
-  {
-    "name": "Bot1",
-    "algoName": "fib",
-    "persist": {
-      "lastTicker": "temporary",
-      "currentPaid": 0.0,
-      "trailingPercent": 2.0,
-      "currentTicker": "",
-      "currentPeak": 0.0,
-      "currentValue": 0.0,
-      "trailingStop": 0.0,
-      "currentPerChange": 0.0
+    {
+        "name": "Bot1",
+        "algoName": "fib",
+        "persist": {
+            "lastTicker": "PAXGUSD",
+            "currentPaid": 1859.14,
+            "trailingPercent": 2,
+            "currentTicker": "PAXGUSD",
+            "currentPeak": 1859.14,
+            "currentValue": 1835.54,
+            "trailingStop": 1821.9572,
+            "currentPerChange": -1.2694041330938148
+        }
+    },
+    {
+        "name": "Bot2",
+        "persist": {
+            "lastTicker": "temporary",
+            "currentPaid": 0,
+            "trailingPercent": 2,
+            "currentTicker": "",
+            "currentPeak": 0,
+            "currentValue": 0,
+            "trailingStop": 0,
+            "currentPerChange": 0
+        }
     }
-  },
-  {
-    "name": "Bot2",
-    "persist": {
-      "lastTicker": "temporary",
-      "currentPaid": 0.0,
-      "trailingPercent": 2.0,
-      "currentTicker": "",
-      "currentPeak": 0.0,
-      "currentValue": 0.0,
-      "trailingStop": 0.0,
-      "currentPerChange": 0.0
-    }
-  }
 ]
