@@ -1,21 +1,46 @@
-import java.util.Arrays;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.stream.Collectors;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.*;
 
 public class Main {
     public static final int CYCLE_TIME = 15;     //run the market test every X seconds
     public static DiscordBot UPDATER = new DiscordBot();
-    public static Market MOGUL = new Market();
+    //public static Market MOGUL = new Market();
+    public static List<Market> MARKETS = createBotsList();
+
+    public static final String botListFile = "src/main/resources/BotList.json";
+    public static final boolean persistData = true;
 
     public static void main(String[] args) {
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
-                MOGUL.MarketBot();
+                MARKETS.forEach(Market::runMarketBot);
+                //MOGUL.MarketBot();
             }
         }, 0, 1000L * CYCLE_TIME); //60000 * MINUTES
+    }
+
+    public static List<Market> createBotsList() {
+        JSONParser parser = new JSONParser();
+        List<Market> marketBots = new ArrayList<>();
+        try (FileReader reader = new FileReader(botListFile)) {
+            JSONArray marketJsonArr = (JSONArray) parser.parse(reader);
+            marketJsonArr.forEach(m -> {
+                JSONObject market = (JSONObject) m;
+                marketBots.add(new Market(market.get("name").toString()));
+                UPDATER.sendUpdateMsg(market.get("name").toString() + " Started.");
+            });
+        } catch (IOException | ParseException e) {
+            e.printStackTrace();
+        }
+        return marketBots;
     }
 }
 

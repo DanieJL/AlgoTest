@@ -36,49 +36,69 @@ public class DiscordBot extends ListenerAdapter {
 
         String messageText = event.getMessage().getContentRaw();
 
-        if(messageText.equals("!ping")){
-            event.getChannel().sendMessage("PONG BITCH!").queue();
-            if(Main.MOGUL.getCoinSymbol().equals("")){
-                this.channel.sendMessage("Currently looking for a coin!").queue();
-            }
-        }
-        if(messageText.equals("!quit") || messageText.equals("!shutdown") ){
-            this.channel.sendMessage("SHUTTING DOWN").queue();
-            Main.MOGUL.saveCurrentValues();
-            System.exit(0);
-        }
-        if(messageText.equals("!sell")){
-            if(Main.MOGUL.getCoinSymbol().equals("")){
-                this.channel.sendMessage("You aren't holding anything to sell!").queue();
-            }
-            else{
-                Main.MOGUL.updateCurrent();
-                Main.MOGUL.sellCurrent();
-            }
-        }
-        if(messageText.equals("!data")) {
-            File file = new File("sellLog.txt");
-            try {
-                BufferedReader br = new BufferedReader(new FileReader(file));
-                String st;
-                int posCount = 0; double posAvg = 0;
-                int negCount = 0; double negAvg = 0;
-                double total = 0;
-                int count = 0;
-                while ((st = br.readLine()) != null){
-                    double value = Double.parseDouble(st.substring(st.lastIndexOf("(")+1,st.lastIndexOf("%")));
-                    total += value;
-                    if(value>0){posCount++; posAvg+=value;}
-                    else{negCount++; negAvg+=value;}
-                    count++;
+        for (Market market : Main.MARKETS) {
+            if (messageText.equals("!ping")) {
+                event.getChannel().sendMessage("PONG BITCH!").queue();
+                if (market.getCoinSymbol().equals("")) {
+                    this.channel.sendMessage(market.getName() + " is currently looking for a coin!").queue();
                 }
-                posAvg = posAvg/posCount;
-                negAvg = negAvg/negCount;
-                String data = count + " trades: " + total + "%\nAdjusted: " + (total-((count)*.15)) + "%\n\n" + //adjusted is assuming .075%x2 fee to buy and sell
-                        posCount + " positive trades: " + posAvg + "%/avg\n" + negCount + " negative trades: " + negAvg + "%/avg";
-                this.channel.sendMessage(data).queue();
-            } catch (IOException e) {
-                e.printStackTrace();
+            }
+            if (messageText.equals("!quit") || messageText.equals("!shutdown")) {
+                this.channel.sendMessage(market.getName() + " SHUTTING DOWN").queue();
+                market.saveCurrentValues();
+                System.exit(0);
+            }
+            if (messageText.contains("!sell")) {
+                String cmdSplit[] = messageText.split(" ", 3);
+                if (cmdSplit.length > 1 && cmdSplit[1].equals(market.getName())) {
+                    if (market.getCoinSymbol().equals("")) {
+                        this.channel.sendMessage(market.getName() + " isn't holding anything to sell!").queue();
+                    } else {
+                        market.updateCurrent();
+                        market.sellCurrent();
+                    }
+                    break;
+                } else if (cmdSplit.length > 1) {
+                    continue;
+                }
+                if (market.getCoinSymbol().equals("")) {
+                    this.channel.sendMessage(market.getName() + " isn't holding anything to sell!").queue();
+                } else {
+                    market.updateCurrent();
+                    market.sellCurrent();
+                }
+            }
+            if (messageText.equals("!data")) {
+                File file = new File(market.getName() + "_sellLog.txt");
+                try {
+                    BufferedReader br = new BufferedReader(new FileReader(file));
+                    String st;
+                    int posCount = 0;
+                    double posAvg = 0;
+                    int negCount = 0;
+                    double negAvg = 0;
+                    double total = 0;
+                    int count = 0;
+                    while ((st = br.readLine()) != null) {
+                        double value = Double.parseDouble(st.substring(st.lastIndexOf("(") + 1, st.lastIndexOf("%")));
+                        total += value;
+                        if (value > 0) {
+                            posCount++;
+                            posAvg += value;
+                        } else {
+                            negCount++;
+                            negAvg += value;
+                        }
+                        count++;
+                    }
+                    posAvg = posAvg / posCount;
+                    negAvg = negAvg / negCount;
+                    String data = count + " trades: " + total + "%\nAdjusted: " + (total - ((count) * .15)) + "%\n\n" + //adjusted is assuming .075%x2 fee to buy and sell
+                            posCount + " positive trades: " + posAvg + "%/avg\n" + negCount + " negative trades: " + negAvg + "%/avg";
+                    this.channel.sendMessage("```[" + market.getName() + "]\n" + data + "```").queue();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }

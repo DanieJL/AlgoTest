@@ -7,6 +7,9 @@ import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+import util.ApiClient;
 
 import java.io.*;
 import java.text.DecimalFormat;
@@ -24,10 +27,10 @@ public class Market {
     private static final DecimalFormat df = new DecimalFormat("#.###");
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy hh:mm a");
     private static final DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("hh:mm a");
-    private String[] allowedTickers;
 
     private final double trailingPercentBase = 2;   //the percent you want the stop loss trail to start at
 
+    private String name = "Default";
     private String coinSymbol = "";
     private double coinValue = 0;
     private double coinValuePaid = 0;
@@ -36,9 +39,21 @@ public class Market {
     private String lastSymbol = "temporary";
     private double trailingStopValue = 0;
     private double trailingPercent = trailingPercentBase;
+    private String algoName = "default";
+    private static Algorithms algos;
 
     Market() {
         loadCurrentValues();
+    }
+
+    Market(String name) {
+        this.name = name;
+        loadCurrentValues();
+        algos = new Algorithms();
+    }
+
+    public String getName() {
+        return this.name;
     }
 
     public String getCoinSymbol() {
@@ -47,7 +62,7 @@ public class Market {
 
     private int updateCycleCounter = 1;
 
-    public void MarketBot() {
+    public void runMarketBot() {
         String d = LocalDateTime.now().format(formatter2);
         LOGGER.info("\nRan test at " + d);
 
@@ -63,7 +78,7 @@ public class Market {
             } else {
                 LOGGER.info("Holding " + coinSymbol + ": " + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%) [Paid: " + coinValuePaid + " Trail: " + df.format(trailingStopValue) + "] (" + trailingPercent + "%)");
                 if (updateCycleCounter < 1) {
-                    Main.UPDATER.sendUpdateMsg("```(" + d + ") " + coinSymbol + ": " + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%)```");
+                    Main.UPDATER.sendUpdateMsg("```[" + this.getName() + "](" + d + ") " + coinSymbol + ": " + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%)```");
                     updateCycleCounter = 60 / Main.CYCLE_TIME; //only send discord updates every minute
                 } else {
                     updateCycleCounter--;
@@ -78,106 +93,85 @@ public class Market {
     }
 
     public void saveCurrentValues() {
-        Preferences prefs = Preferences.userNodeForPackage(Main.class);
-        prefs.put("currentTicker", coinSymbol);
-        prefs.put("lastTicker", lastSymbol);
-        prefs.putDouble("currentValue", coinValue);
-        prefs.putDouble("trailingPercent", trailingPercent);
-        prefs.putDouble("trailingStop", trailingStopValue);
-        prefs.putDouble("currentPeak", coinValuePeak);
-        prefs.putDouble("currentPaid", coinValuePaid);
-        prefs.putDouble("currentPerChange", coinPercentChange);
-    }
+        if (Main.persistData) {
+            JSONParser parser = new JSONParser();
+            org.json.simple.JSONArray marketJsonArr = new org.json.simple.JSONArray();
+            try (FileReader reader = new FileReader(Main.botListFile)) {
+                marketJsonArr = (org.json.simple.JSONArray) parser.parse(reader);
 
-    private void loadCurrentValues() {
-        Preferences prefs = Preferences.userNodeForPackage(Main.class);
-        coinSymbol = prefs.get("currentTicker", "");
-        lastSymbol = prefs.get("lastTicker", "temporary");
-        coinValue = prefs.getDouble("currentValue", 0);
-        trailingPercent = prefs.getDouble("trailingPercent", trailingPercentBase);
-        trailingStopValue = prefs.getDouble("trailingStop", 0);
-        coinValuePeak = prefs.getDouble("currentPeak", 0);
-        coinValuePaid = prefs.getDouble("currentPaid", 0);
-        coinPercentChange = prefs.getDouble("currentPerChange", 0);
+                org.json.simple.JSONObject marketValues = null;
+                int index = 0;
+                for (Object m : marketJsonArr) {
+                    org.json.simple.JSONObject market = (org.json.simple.JSONObject) m;
+                    if (market.get("name").toString().equalsIgnoreCase(this.getName())) {
+                        marketValues = market;
+                        org.json.simple.JSONObject persist = (org.json.simple.JSONObject) marketValues.getOrDefault("persist", new org.json.simple.JSONObject());
+                        persist.put("currentTicker", coinSymbol);
+                        persist.put("lastTicker", lastSymbol);
+                        persist.put("currentValue", coinValue);
+                        persist.put("trailingPercent", trailingPercent);
+                        persist.put("trailingStop", trailingStopValue);
+                        persist.put("currentPeak", coinValuePeak);
+                        persist.put("currentPaid", coinValuePaid);
+                        persist.put("currentPerChange", coinPercentChange);
 
-        /*Load list of allowed coins into array*/
-        try {
-            BufferedReader br = new BufferedReader(new FileReader("allowed.txt"));
-            String str;
-            List<String> list = new ArrayList<>();
-            while ((str = br.readLine()) != null) {
-                list.add(str);
-            }
-            allowedTickers = list.toArray(new String[0]);
-            br.close();
-        } catch (Exception e) {
-            LOGGER.error("Error reading allowed coins file. Error: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
+                        marketValues.put("persist", persist);
+                        index = marketJsonArr.indexOf(market);
+                    }
+                }
+                marketJsonArr.remove(index);
+                marketJsonArr.add(index, marketValues);
 
-    private static String makeAPICall(String url) throws IOException {
-        String response_content;
-
-        CloseableHttpClient client = HttpClients.createDefault();
-        HttpGet request = new HttpGet(url);
-
-        try (CloseableHttpResponse response = client.execute(request)) {
-            HttpEntity entity = response.getEntity();
-            response_content = EntityUtils.toString(entity);
-            EntityUtils.consume(entity);
-        }
-        return response_content;
-    }
-
-    public List<Candlestick> getKlineData(String symbol, String interval) {
-        List<Candlestick> allCandlesticks = new ArrayList<>();
-
-        String startTime = "1604221113";
-        String url = "https://api.binance.us/api/v3/klines?symbol=" + symbol + "&interval=" + interval + "&limit=1000"; // + "&startTime=" + startTime;
-
-        while (true) {
-            if (!allCandlesticks.isEmpty()) {
-                url = "https://api.binance.us/api/v3/klines?symbol=" + symbol + "&interval=" + interval + "&limit=1000" + "&startTime=" + allCandlesticks.get(allCandlesticks.size() - 1).getOpenTime();
-            }
-
-            JSONArray data = new JSONArray();
-            try {
-                data = new JSONArray(makeAPICall(url));
-            } catch (IOException e) {
+            } catch (IOException | ParseException e) {
                 e.printStackTrace();
             }
 
-            List<Candlestick> candlesticks = new ArrayList<>();
 
-            for (int i = 0; i < data.length(); i++) {
-                JSONArray stick = data.getJSONArray(i);
-                candlesticks.add(new Candlestick(stick.getLong(0),
-                        Double.parseDouble(stick.getString(1)),
-                        Double.parseDouble(stick.getString(4))));
+            //Write JSON file
+            try (FileWriter file = new FileWriter(Main.botListFile)) {
+                //We can write any JSONArray or JSONObject instance to the file
+                file.write(marketJsonArr.toJSONString());
+                file.flush();
+
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            allCandlesticks.addAll(candlesticks);
-            break;
-//            if (candlesticks.size() < 999) {
-//                break;
-//            }
         }
-
-
-
-        return allCandlesticks;
     }
 
-    private long getDateDeltaUnix(int days) {
-        Calendar cal = Calendar.getInstance();
-        cal.add(Calendar.DATE, days);
+    private void loadCurrentValues() {
+        JSONParser parser = new JSONParser();
+        org.json.simple.JSONArray marketJsonArr;
+        try (FileReader reader = new FileReader(Main.botListFile)) {
+            marketJsonArr = (org.json.simple.JSONArray) parser.parse(reader);
 
-        return cal.getTime().getTime();
+            for (Object m : marketJsonArr) {
+                org.json.simple.JSONObject market = (org.json.simple.JSONObject) m;
+                if (market.get("name").toString().equalsIgnoreCase(this.getName())) {
+                    algoName = market.getOrDefault("algoName", "default").toString();
+                    market = (org.json.simple.JSONObject) market.getOrDefault("persist", new org.json.simple.JSONObject());
+                    coinSymbol = market.getOrDefault("currentTicker", "").toString();
+                    lastSymbol = market.getOrDefault("lastTicker", "temporary").toString();
+                    coinValue = Double.parseDouble(market.getOrDefault("currentValue", 0).toString());
+                    trailingPercent = Double.parseDouble(market.getOrDefault("trailingPercent", trailingPercentBase).toString());
+                    trailingStopValue = Double.parseDouble(market.getOrDefault("trailingStop", 0).toString());
+                    coinValuePeak = Double.parseDouble(market.getOrDefault("currentPeak", 0).toString());
+                    coinValuePaid = Double.parseDouble(market.getOrDefault("currentPaid", 0).toString());
+                    coinPercentChange = Double.parseDouble(market.getOrDefault("currentPerChange", 0).toString());
+                }
+            }
+        } catch (IOException | ParseException e) {
+            e.printStackTrace();
+        }
+
     }
 
     /*ALGO GOES HERE*/
     public String findNew() {
-        return "DOGECOIN";
+        return switch (algoName) {
+            case "fib" -> algos.fib618();
+            default -> algos.rsiGt60();
+        };
     }
 
     private void buyNew(String newTicker) {
@@ -189,7 +183,7 @@ public class Market {
                 updateCurrent();
                 trailingStopValue = (coinValue - ((trailingPercentBase / 100.0) * coinValue));
                 updateCurrent();
-                String message = "Bought " + coinSymbol + " at $" + coinValue + " [https://www.binance.us/en/trade/pro/" + coinSymbol + "]";
+                String message = "[" + this.getName() + "] Bought " + coinSymbol + " at $" + coinValue + " [https://www.binance.us/en/trade/pro/" + coinSymbol + "]";
                 LOGGER.info(message);
                 Main.UPDATER.sendUpdateMsg(message);
             }
@@ -200,7 +194,7 @@ public class Market {
     public void updateCurrent() {
         String url = "https://www.binance.us/api/v3/ticker/price?symbol=" + coinSymbol;
         try {
-            String JSON_DATA = makeAPICall(url);
+            String JSON_DATA = ApiClient.makeAPICall(url);
             JSONObject data = new JSONObject(JSON_DATA);
             for (Iterator it = data.keys(); it.hasNext(); ) {
                 String key = (String) it.next();
@@ -235,13 +229,13 @@ public class Market {
     public void sellCurrent() {
         //SELL CODE GOES HERE
         if (tradeConfirm("")) {
-            String message = "Sold " + coinSymbol + " at $" + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%)";
+            String message = "[" + this.getName() + "] Sold " + coinSymbol + " at $" + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%)";
             LOGGER.info(message);
             Main.UPDATER.sendUpdateMsg(message);
 
             String d = LocalDateTime.now().format(formatter);
             try {
-                File file = new File("sellLog.txt");
+                File file = new File(this.name + "_sellLog.txt");
                 FileWriter fw = new FileWriter(file, true);
                 if (file.length() != 0) {
                     fw.write("\n");
