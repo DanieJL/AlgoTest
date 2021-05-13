@@ -222,7 +222,9 @@ public class Market {
 
             String d = LocalDateTime.now().format(formatter);
             try {
-                File file = new File(this.name + "_sellLog.txt");
+                File dir = new File("sellLogs");
+                dir.mkdir();
+                File file = new File(dir, this.name + "_sellLog.txt");
                 FileWriter fw = new FileWriter(file, true);
                 if (file.length() != 0) {
                     fw.write("\n");
@@ -244,7 +246,7 @@ public class Market {
         }
     }
 
-    private boolean tradeConfirm(String s) {
+    private boolean tradeConfirm(String symbol) {
      /*  boolean confirmed = false;
        if(s.equals("")){
             confirm it sold

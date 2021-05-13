@@ -76,7 +76,9 @@ public class DiscordBot extends ListenerAdapter {
             }
             if (messageText.equals("!data")) {
                 try {
-                    File file = new File(market.getName() + "_sellLog.txt");
+                    File dir = new File("sellLogs");
+                    dir.mkdir();
+                    File file = new File(dir,market.getName() + "_sellLog.txt");
                     BufferedReader br = new BufferedReader(new FileReader(file));
                     String st;
                     int posCount = 0;
