@@ -1,9 +1,3 @@
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -12,16 +6,14 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import util.ApiClient;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
-
-import java.util.prefs.Preferences;
-import java.util.stream.Collectors;
-
-import static java.lang.Math.abs;
+import java.util.Iterator;
 
 public class Market {
     private final static Logger LOGGER = Logger.getLogger(Market.class);
@@ -65,7 +57,6 @@ public class Market {
 
     public void runMarketBot() {
         String d = LocalDateTime.now().format(formatter2);
-        LOGGER.info("\nRan test at " + d);
 
         if (coinSymbol.length() != 0) {
             updateCurrent();
@@ -74,7 +65,7 @@ public class Market {
                 buyNew(findNew());
             } else {
                 LOGGER.info("Holding " + coinSymbol + ": " + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%) [Paid: " + coinValuePaid + " Trail: " + df.format(trailingStopValue) + "] (" + trailingPercent + "%)");
-                if (updateCycleCounter < 1) {
+                if (updateCycleCounter <= 1) {
                     Main.UPDATER.sendUpdateMsg("```[" + this.getName() + "](" + d + ") " + coinSymbol + ": " + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%)```");
                     updateCycleCounter = 60 / Main.CYCLE_TIME; //only send discord updates every minute
                 } else {

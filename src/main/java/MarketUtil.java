@@ -61,7 +61,7 @@ public class MarketUtil {
 
             results[i] = 100.0 - 100.0 / (1.0 + (ut1 / dt1));
         }
-
+        System.out.println("Last RSI: " + results[results.length - 1]);
         return results;
     }
 
@@ -81,8 +81,11 @@ public class MarketUtil {
         double diff = max - min.getClose();
 
         double level382 = getIndFibRetracement(max, diff, .382);
+        System.out.println(".382 FIB: " + level382);
         double level5 = getIndFibRetracement(max, diff, .5);
+        System.out.println(".5 FIB: " + level5);
         double level618 = getIndFibRetracement(max, diff, .618);
+        System.out.println(".618 FIB: " + level618);
 
         return new double[]{level382, level5, level618};
     }

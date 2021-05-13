@@ -46,14 +46,10 @@ public class Main {
 
 //TODO: stuff
 
-//Store BOT key/channel ID/files locations/binance key more smarterly
 //-- ConfigHandler added for this, add bot.config to resources folder
 //--format is key=value
 
 //Implement actual trading
-//Implement tradeConfirm()
-//Put into GIT
-//Case is awesome
 
 //**ALGO STUFF**
 //RSI seems off?
