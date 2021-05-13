@@ -1,20 +1,34 @@
 [
     {
-        "name": "Bot1",
+        "name": "Fib618CheckOnly",
         "algoName": "fib",
         "persist": {
-            "lastTicker": "PAXGUSD",
-            "currentPaid": 1859.14,
+            "lastTicker": "BATUSD",
+            "currentPaid": 1.8587,
             "trailingPercent": 2,
-            "currentTicker": "PAXGUSD",
-            "currentPeak": 1859.14,
-            "currentValue": 1835.54,
-            "trailingStop": 1821.9572,
-            "currentPerChange": -1.2694041330938148
+            "currentTicker": "IOTAUSD",
+            "currentPeak": 1.866,
+            "currentValue": 1.866,
+            "trailingStop": 1.82868,
+            "currentPerChange": 0.39274761930381885
         }
     },
     {
-        "name": "Bot2",
+        "name": "RSILT30CheckOnly",
+        "persist": {
+            "lastTicker": "BTCUSD",
+            "currentPaid": 50536.47,
+            "trailingPercent": 2,
+            "currentTicker": "BTCBUSD",
+            "currentPeak": 50584.49,
+            "currentValue": 50564.26,
+            "trailingStop": 49572.8002,
+            "currentPerChange": 0.054989990397032784
+        }
+    },
+    {
+        "name": "Fib618ANDRSILT30",
+        "algoName": "rsiAndFib",
         "persist": {
             "lastTicker": "temporary",
             "currentPaid": 0,

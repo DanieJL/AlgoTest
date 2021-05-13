@@ -1,3 +1,4 @@
+import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import util.ApiClient;
 import util.GeneralUtil;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class Algorithms {
+    private final static Logger LOGGER = Logger.getLogger(DiscordBot.class);
     private static String[] allowedTickers;
 
     static {
@@ -31,18 +33,10 @@ public class Algorithms {
     public String rsiGt60() {
         for (String ticker : allowedTickers) {
             List<Candlestick> cStickDataForRSI = getKlineData(ticker, "4h");
-            List<Candlestick> cStickDataForFIB = cStickDataForRSI
-                    .stream()
-                    .filter(stick -> stick.getOpenTime() >= GeneralUtil.getDateDeltaUnix(-20))
-                    .collect(Collectors.toList());
+            if (cStickDataForRSI.isEmpty())
+                continue;
             double[] rsiData = MarketUtil.calculateRSIValues(cStickDataForRSI, 14);
-            double[] fibs = MarketUtil.calculateKeyFibRetracements(cStickDataForFIB);
             if (rsiData[rsiData.length - 1] < 30) {
-                double fib618 = fibs[2];
-                double lastClose = cStickDataForFIB.get(cStickDataForFIB.size() - 1).getClose();
-                double fibDiff = Math.abs(lastClose - fib618);
-                double fibDiffPercent = fibDiff / lastClose;
-
                 return ticker;
             }
         }
@@ -51,8 +45,10 @@ public class Algorithms {
 
     public String fib618() {
         for (String ticker : allowedTickers) {
-            List<Candlestick> cStickDataForRSI = getKlineData(ticker, "4h");
-            List<Candlestick> cStickDataForFIB = cStickDataForRSI
+            List<Candlestick> klineData = getKlineData(ticker, "4h");
+            if (klineData.isEmpty())
+                continue;
+            List<Candlestick> cStickDataForFIB = klineData
                     .stream()
                     .filter(stick -> stick.getOpenTime() >= GeneralUtil.getDateDeltaUnix(-20))
                     .collect(Collectors.toList());
@@ -63,7 +59,35 @@ public class Algorithms {
             double fibDiffPercent = fibDiff / lastClose;
 
             if (fibDiffPercent <= .02) {
+                LOGGER.info(".618 FIB: " + fib618 + "\nLast Close: " + lastClose);
                 return ticker;
+            }
+        }
+        return "";
+    }
+
+    public String rsiAndFib() {
+        for (String ticker : allowedTickers) {
+            List<Candlestick> klineData = getKlineData(ticker, "4h");
+            if (klineData.isEmpty())
+                continue;
+            List<Candlestick> cStickDataForFIB = klineData
+                    .stream()
+                    .filter(stick -> stick.getOpenTime() >= GeneralUtil.getDateDeltaUnix(-20))
+                    .collect(Collectors.toList());
+
+            double[] rsiData = MarketUtil.calculateRSIValues(klineData, 14);
+            if (rsiData[rsiData.length - 1] < 30) {
+                double[] fibs = MarketUtil.calculateKeyFibRetracements(cStickDataForFIB);
+                double fib618 = fibs[2];
+                double lastClose = cStickDataForFIB.get(cStickDataForFIB.size() - 1).getClose();
+                double fibDiff = Math.abs(lastClose - fib618);
+                double fibDiffPercent = fibDiff / lastClose;
+
+                if (fibDiffPercent <= .02) {
+                    LOGGER.info(".618 FIB: " + fib618 + "\nLast Close: " + lastClose);
+                    return ticker;
+                }
             }
         }
         return "";
@@ -82,7 +106,9 @@ public class Algorithms {
 
             JSONArray data = new JSONArray();
             try {
-                data = new JSONArray(ApiClient.makeAPICall(url));
+                String response = ApiClient.makeAPICall(url);
+                if (ApiClient.isValidJsonArr(response))
+                    data = new JSONArray(response);
             } catch (IOException e) {
                 e.printStackTrace();
             }

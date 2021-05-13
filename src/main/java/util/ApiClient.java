@@ -8,6 +8,8 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
+import org.json.JSONArray;
+import org.json.JSONException;
 
 import javax.net.ssl.SSLException;
 import java.io.IOException;
@@ -45,5 +47,15 @@ public class ApiClient {
             response_content = "";
         }
         return response_content;
+    }
+
+    public static boolean isValidJsonArr(String jsonString) {
+        try {
+            new JSONArray(jsonString);
+            return true;
+        } catch (JSONException e) {
+            LOGGER.error("Not a valid JSON: " + jsonString);
+            return false;
+        }
     }
 }

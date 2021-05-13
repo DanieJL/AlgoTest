@@ -164,6 +164,7 @@ public class Market {
     public String findNew() {
         return switch (algoName) {
             case "fib" -> algos.fib618();
+            case "rsiAndFib" -> algos.rsiAndFib();
             default -> algos.rsiGt60();
         };
     }

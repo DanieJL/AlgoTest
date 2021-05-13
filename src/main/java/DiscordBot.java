@@ -69,8 +69,8 @@ public class DiscordBot extends ListenerAdapter {
                 }
             }
             if (messageText.equals("!data")) {
-                File file = new File(market.getName() + "_sellLog.txt");
                 try {
+                    File file = new File(market.getName() + "_sellLog.txt");
                     BufferedReader br = new BufferedReader(new FileReader(file));
                     String st;
                     int posCount = 0;
@@ -97,7 +97,7 @@ public class DiscordBot extends ListenerAdapter {
                             posCount + " positive trades: " + posAvg + "%/avg\n" + negCount + " negative trades: " + negAvg + "%/avg";
                     this.channel.sendMessage("```[" + market.getName() + "]\n" + data + "```").queue();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    this.channel.sendMessage("```[" + market.getName() + "] No sales completed by this bot.```").queue();
                 }
             }
         }
