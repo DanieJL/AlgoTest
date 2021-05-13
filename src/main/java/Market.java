@@ -19,7 +19,6 @@ public class Market {
     private final static Logger LOGGER = Logger.getLogger(Market.class);
     private static final DecimalFormat df = new DecimalFormat("#.###");
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy hh:mm a");
-    private static final DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("hh:mm a");
 
     private final double trailingPercentBase = 2;   //the percent you want the stop loss trail to start at
 
@@ -53,29 +52,27 @@ public class Market {
         return coinSymbol;
     }
 
+    public double getCoinValue() {
+        return coinValue;
+    }
+
+    public double getCoinPercentChange() {
+        return coinPercentChange;
+    }
+
     private int updateCycleCounter = 1;
 
     public void runMarketBot() {
-        String d = LocalDateTime.now().format(formatter2);
-
         if (coinSymbol.length() != 0) {
             updateCurrent();
             if (coinValue < trailingStopValue) {
                 sellCurrent();
                 buyNew(findNew());
-            } else {
-                LOGGER.info("Holding " + coinSymbol + ": " + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%) [Paid: " + coinValuePaid + " Trail: " + df.format(trailingStopValue) + "] (" + trailingPercent + "%)");
-                if (updateCycleCounter <= 1) {
-                    Main.UPDATER.sendUpdateMsg("```[" + this.getName() + "](" + d + ") " + coinSymbol + ": " + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%)```");
-                    updateCycleCounter = 60 / Main.CYCLE_TIME; //only send discord updates every minute
-                } else {
-                    updateCycleCounter--;
-                }
-                saveCurrentValues();
             }
         } else {
             buyNew(findNew());
         }
+        saveCurrentValues();
     }
 
     public void saveCurrentValues() {

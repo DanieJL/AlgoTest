@@ -30,7 +30,7 @@ public class ApiClient {
                     .filter(header -> header.getName().equalsIgnoreCase("x-mbx-used-weight-1m"))
                     .findFirst()
                     .get().getValue();
-            LOGGER.info("1 minute request uses: " + rateLimitUsed);
+            //LOGGER.info("1 minute request uses: " + rateLimitUsed);
             if (Integer.parseInt(rateLimitUsed) > 1100 || response.getStatusLine().getStatusCode() == 429) {
                 LOGGER.error("BREAKING API LIMIT - PAUSING FOR 2 MINUTES");
                 GeneralUtil.waitSeconds(120);
