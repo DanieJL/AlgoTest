@@ -33,11 +33,7 @@ public class ApiClient {
             LOGGER.info("1 minute request uses: " + rateLimitUsed);
             if (Integer.parseInt(rateLimitUsed) > 1100 || response.getStatusLine().getStatusCode() == 429) {
                 LOGGER.error("BREAKING API LIMIT - PAUSING FOR 2 MINUTES");
-                try {
-                    Thread.sleep(120000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                GeneralUtil.waitSeconds(120);
             }
 
             HttpEntity entity = response.getEntity();

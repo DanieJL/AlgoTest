@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.apache.log4j.Logger;
 import util.ConfigHandler;
+import util.GeneralUtil;
 
 import javax.security.auth.login.LoginException;
 import java.io.BufferedReader;
@@ -38,17 +39,20 @@ public class DiscordBot extends ListenerAdapter {
         if (!event.getChannel().getId().equals(channel.getId()))
             return;
 
+        if (messageText.equals("!quit") || messageText.equals("!shutdown")) {
+            for (Market market : Main.MARKETS) {
+                this.channel.sendMessage("Saving settings and shutting down [" + market.getName() + "]").queue();
+                market.saveCurrentValues();
+            }
+            GeneralUtil.waitSeconds(5);
+            System.exit(0);
+        }
         for (Market market : Main.MARKETS) {
             if (messageText.equals("!ping")) {
                 event.getChannel().sendMessage("PONG BITCH!").queue();
                 if (market.getCoinSymbol().equals("")) {
                     this.channel.sendMessage(market.getName() + " is currently looking for a coin!").queue();
                 }
-            }
-            if (messageText.equals("!quit") || messageText.equals("!shutdown")) {
-                this.channel.sendMessage(market.getName() + " SHUTTING DOWN").queue();
-                market.saveCurrentValues();
-                System.exit(0);
             }
             if (messageText.contains("!sell")) {
                 String cmdSplit[] = messageText.split(" ", 3);

@@ -1,13 +1,43 @@
 [
     {
         "name": "Fib618CheckOnly",
-        "algoName": "fib"
+        "algoName": "fib",
+        "persist": {
+            "lastTicker": "BATUSD",
+            "currentPaid": 1.2194,
+            "trailingPercent": 2,
+            "currentTicker": "BATUSD",
+            "currentPeak": 1.2197,
+            "currentValue": 1.2197,
+            "trailingStop": 1.195306,
+            "currentPerChange": 0.024602263408226577
+        }
     },
     {
-        "name": "RSILT30CheckOnly"
+        "name": "RSILT30CheckOnly",
+        "persist": {
+            "lastTicker": "REPBUSD",
+            "currentPaid": 0,
+            "trailingPercent": 2,
+            "currentTicker": "",
+            "currentPeak": 0,
+            "currentValue": 0,
+            "trailingStop": 0,
+            "currentPerChange": 0
+        }
     },
     {
         "name": "Fib618ANDRSILT30",
-        "algoName": "rsiAndFib"
+        "algoName": "rsiAndFib",
+        "persist": {
+            "lastTicker": "ZILBUSD",
+            "currentPaid": 0,
+            "trailingPercent": 2,
+            "currentTicker": "",
+            "currentPeak": 0,
+            "currentValue": 0,
+            "trailingStop": 0,
+            "currentPerChange": 0
+        }
     }
 ]
