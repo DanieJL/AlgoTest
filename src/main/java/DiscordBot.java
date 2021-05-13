@@ -102,7 +102,7 @@ public class DiscordBot extends ListenerAdapter {
                     posAvg = posAvg / posCount;
                     negAvg = negAvg / negCount;
                     String data = count + " trades: " + total + "%\nAdjusted: " + (total - ((count) * .15)) + "%\n\n" + //adjusted is assuming .075%x2 fee to buy and sell
-                            posCount + " positive trades: " + posAvg + "%/avg\n" + negCount + " negative trades: " + negAvg + "%/avg";
+                            posCount + " positive trades: " + posAvg + "%/avg\n" + negCount + " negative trades: " + negAvg + "%/avg\nAccount Value: " + market.getAccountVal() + "\n\n";
                     this.channel.sendMessage("```[" + market.getName() + "]\n" + data + "```").queue();
                 } catch (IOException e) {
                     this.channel.sendMessage("```[" + market.getName() + "] No sales completed by this bot.```").queue();

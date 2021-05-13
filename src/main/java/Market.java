@@ -32,6 +32,8 @@ public class Market {
     private double trailingStopValue = 0;
     private double trailingPercent = trailingPercentBase;
     private String algoName = "default";
+    private double numCoinsHeld = 0;
+    private double accountVal = 1000;
     private static Algorithms algos;
 
     Market() {
@@ -58,6 +60,10 @@ public class Market {
 
     public double getCoinPercentChange() {
         return coinPercentChange;
+    }
+
+    public double getAccountVal() {
+        return accountVal;
     }
 
     private int updateCycleCounter = 1;
@@ -97,6 +103,8 @@ public class Market {
                         persist.put("currentPeak", coinValuePeak);
                         persist.put("currentPaid", coinValuePaid);
                         persist.put("currentPerChange", coinPercentChange);
+                        persist.put("numCoinsHeld", numCoinsHeld);
+                        persist.put("accountVal", accountVal);
 
                         marketValues.put("persist", persist);
                         index = marketJsonArr.indexOf(market);
@@ -141,6 +149,8 @@ public class Market {
                     coinValuePeak = Double.parseDouble(market.getOrDefault("currentPeak", 0).toString());
                     coinValuePaid = Double.parseDouble(market.getOrDefault("currentPaid", 0).toString());
                     coinPercentChange = Double.parseDouble(market.getOrDefault("currentPerChange", 0).toString());
+                    numCoinsHeld = Double.parseDouble(market.getOrDefault("numCoinsHeld", 0).toString());
+                    accountVal = Double.parseDouble(market.getOrDefault("accountVal", 1000).toString());
                 }
             }
         } catch (IOException | ParseException e) {
@@ -205,6 +215,10 @@ public class Market {
                 }
                 trailingStopValue = (coinValuePeak - ((trailingPercent / 100.0) * coinValuePeak));
             }
+            if (numCoinsHeld == 0) {
+                numCoinsHeld = (accountVal - (accountVal * .01)) / coinValue;
+            }
+            accountVal = numCoinsHeld * coinValue;
         } catch (IOException | JSONException e) {
             LOGGER.error("Error: cannot access content - " + e.toString());
         }
@@ -216,6 +230,8 @@ public class Market {
             String message = "[" + this.getName() + "] Sold " + coinSymbol + " at $" + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%)";
             LOGGER.info(message);
             Main.UPDATER.sendUpdateMsg(message);
+            double newAccountVal = numCoinsHeld * coinValue;
+            newAccountVal = newAccountVal - (newAccountVal * .01);
 
             String d = LocalDateTime.now().format(formatter);
             try {
@@ -239,6 +255,8 @@ public class Market {
             coinValuePeak = 0;
             coinValuePaid = 0;
             coinPercentChange = 0;
+            numCoinsHeld = 0;
+            accountVal = newAccountVal;
             saveCurrentValues();
         }
     }
