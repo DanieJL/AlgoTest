@@ -1,43 +1,13 @@
 [
     {
         "name": "Fib618CheckOnly",
-        "algoName": "fib",
-        "persist": {
-            "lastTicker": "BATUSD",
-            "currentPaid": 1.8587,
-            "trailingPercent": 2,
-            "currentTicker": "IOTAUSD",
-            "currentPeak": 1.866,
-            "currentValue": 1.866,
-            "trailingStop": 1.82868,
-            "currentPerChange": 0.39274761930381885
-        }
+        "algoName": "fib"
     },
     {
-        "name": "RSILT30CheckOnly",
-        "persist": {
-            "lastTicker": "BTCUSD",
-            "currentPaid": 50536.47,
-            "trailingPercent": 2,
-            "currentTicker": "BTCBUSD",
-            "currentPeak": 50584.49,
-            "currentValue": 50564.26,
-            "trailingStop": 49572.8002,
-            "currentPerChange": 0.054989990397032784
-        }
+        "name": "RSILT30CheckOnly"
     },
     {
         "name": "Fib618ANDRSILT30",
-        "algoName": "rsiAndFib",
-        "persist": {
-            "lastTicker": "temporary",
-            "currentPaid": 0,
-            "trailingPercent": 2,
-            "currentTicker": "",
-            "currentPeak": 0,
-            "currentValue": 0,
-            "trailingStop": 0,
-            "currentPerChange": 0
-        }
+        "algoName": "rsiAndFib"
     }
 ]

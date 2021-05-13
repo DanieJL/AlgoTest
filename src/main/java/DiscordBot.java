@@ -35,6 +35,8 @@ public class DiscordBot extends ListenerAdapter {
         if (event.getAuthor().isBot()) {return;}
 
         String messageText = event.getMessage().getContentRaw();
+        if (!event.getChannel().getId().equals(channel.getId()))
+            return;
 
         for (Market market : Main.MARKETS) {
             if (messageText.equals("!ping")) {
