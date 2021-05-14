@@ -51,7 +51,7 @@ public class DiscordBot extends ListenerAdapter {
         }
         for (Market market : Main.MARKETS) {
             if (messageText.contains("!sell")) {
-                String cmdSplit[] = messageText.split(" ", 3);
+                String[] cmdSplit = messageText.split(" ", 3);
                 if (cmdSplit.length > 1 && (cmdSplit[1].equals(market.getName()) || cmdSplit[1].equals("all"))) {
                     if (market.getCoinSymbol().equals("")) {
                         this.channel.sendMessage(market.getName() + " isn't holding anything to sell!").queue();
@@ -60,10 +60,6 @@ public class DiscordBot extends ListenerAdapter {
                         market.sellCurrent();
                     }
                     if(!cmdSplit[1].equals("all")) {break;}
-                }
-                else {
-                    //this.channel.sendMessage("\"!sell [botname]\" or \"!sell all\"").queue();
-                    break;
                 }
             }
             if (messageText.equals("!data")) {
@@ -99,6 +95,14 @@ public class DiscordBot extends ListenerAdapter {
                     this.channel.sendMessage("```[" + market.getName() + "]\n" + data + "```").queue();
                 } catch (IOException e) {
                     this.channel.sendMessage("```[" + market.getName() + "] No sales completed by this bot.```").queue();
+                }
+            }
+            if (messageText.contains("!reset")) {
+                String[] cmdSplit = messageText.split(" ", 3);
+                if (cmdSplit.length > 1 && (cmdSplit[1].equals(market.getName()) || cmdSplit[1].equals("all"))) {
+                    market.resetBot();
+                    this.channel.sendMessage("```[" + market.getName() + "] Reset Successfully.```").queue();
+                    if(!cmdSplit[1].equals("all")) {break;}
                 }
             }
         }

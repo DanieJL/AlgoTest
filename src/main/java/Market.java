@@ -253,6 +253,23 @@ public class Market {
             saveCurrentValues();
         }
     }
+    
+    public void resetBot() {
+        this.coinSymbol = "";
+        this.coinValue = 0;
+        this.coinValuePaid = 0;
+        this.coinValuePeak = 0;
+        this.coinPercentChange = 0;
+        this.lastSymbol = "temporary";
+        this.trailingStopValue = 0;
+        this.trailingPercent = trailingPercentBase;
+        this.numCoinsHeld = 0;
+        this.accountVal = 1000;
+        saveCurrentValues();
+
+        File file = new File("sellLogs", this.name + "_sellLog.txt");
+        file.delete();
+    }
 
     private boolean tradeConfirm(String symbol) {
      /*  boolean confirmed = false;
