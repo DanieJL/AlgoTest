@@ -97,7 +97,8 @@ public class DiscordBot extends ListenerAdapter {
                     double percentGain = ((.1*market.getAccountVal()) - 100);
                     String data = "Account Value: " + df.format(market.getAccountVal()) + " ("+ df.format(percentGain) + "%)\n"
                             + "Current: " + current + "\n\n"
-                            + count + " trades: " + df.format(total) + "% (" + (total - (count*Main.feePercent)) + "% w/ fees)\n"
+                            + count + " trades: " + df.format(total) + "%\n"
+                            + "With " + Main.feePercent + "% fee/trade: " + df.format((total - (count*Main.feePercent))) + "%\n"
                             + posCount + " positive trades: " + df.format(posAvg) + "%/avg\n"
                             + negCount + " negative trades: " + df.format(negAvg) + "%/avg";
                     this.channel.sendMessage("```[" + market.getName() + "]\n" + data + "```").queue();
