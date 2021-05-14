@@ -74,7 +74,7 @@ public class DiscordBot extends ListenerAdapter {
                     int negCount = 0;
                     double negAvg = 0;
                     double total = 0;
-                    int count = 0;
+                    double count = 0;
                     while ((st = br.readLine()) != null) {
                         double value = Double.parseDouble(st.substring(st.lastIndexOf("(") + 1, st.lastIndexOf("%")));
                         total += value;
@@ -89,9 +89,17 @@ public class DiscordBot extends ListenerAdapter {
                     }
                     posAvg = posAvg / posCount;
                     negAvg = negAvg / negCount;
-                    String data = "Account Value: " + market.getAccountVal() + "\n" + count + " trades: " + total +
-                            "%\nAdjusted: " + (total - ((count) * Main.feePercent)) + "%\n\n" + posCount + " positive trades: " + posAvg + "%/avg\n"
-                            + negCount + " negative trades: " + negAvg + "%/avg\n\n";
+                    String current = "Searching...";
+                    if(!market.getCoinSymbol().isEmpty()) {
+                        count+=.5;
+                        current = market.getCoinSymbol() + " " + df.format(market.getCoinValue()) + " (" + df.format(market.getCoinPercentChange()) + "%)";
+                    }
+                    double percentGain = ((.1*market.getAccountVal()) - 100);
+                    String data = "Account Value: " + df.format(market.getAccountVal()) + " ("+ df.format(percentGain) + "%)\n"
+                            + "Current: " + current + "\n\n"
+                            + count + " trades: " + df.format(total) + "% (" + (total - (count*Main.feePercent)) + "% w/ fees)\n"
+                            + posCount + " positive trades: " + df.format(posAvg) + "%/avg\n"
+                            + negCount + " negative trades: " + df.format(negAvg) + "%/avg";
                     this.channel.sendMessage("```[" + market.getName() + "]\n" + data + "```").queue();
                 } catch (IOException e) {
                     this.channel.sendMessage("```[" + market.getName() + "] No sales completed by this bot.```").queue();
