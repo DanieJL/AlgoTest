@@ -73,7 +73,7 @@ public class Algorithms {
         return "";
     }
 
-    public String lowRSIanyFib(int maxRSI, double fibRange) {
+    public String lowRSIanyFib(int maxRSI, double fibRange, double volumeMin) {
         for (String ticker : MarketUtil.allowedTickers) {
             List<Candlestick> klineData = this.klineData.getKline5mData().get(ticker);
             if (klineData.isEmpty())
@@ -84,8 +84,9 @@ public class Algorithms {
                     .collect(Collectors.toList());
 
             double[] rsiData = marketUtil.calculateRSIValues(klineData, 14);
+            double volume = marketUtil.getTotalVolume(klineData, 6);
 
-            if (rsiData[rsiData.length - 1] < maxRSI) {
+            if ((rsiData[rsiData.length - 1] < maxRSI) && volume > volumeMin) {
                 double[] fibs = marketUtil.calculateKeyFibRetracements(cStickDataForFIB);
                 double lastClose = cStickDataForFIB.get(cStickDataForFIB.size() - 1).getClose();
                 for(double d : fibs){
@@ -99,7 +100,7 @@ public class Algorithms {
         }
         return "";
     }
-    public String RSI_MACD_PER(int MACD_RSImax, int rsiIntervals, int maIntervalSmall, int maIntervalBig, int percentIntervals1, double percentMin1, int percentIntervals2, double percentMin2) {
+    public String RSI_MACD_PER(int MACD_RSImax, int rsiRange, int maRangeSmall, int maRangeBig, int percentRange1, double percentMin1, int percentRange2, double percentMin2, double volumeMin) {
         double best = 999;
         String bestTicker = "";
         for (String ticker : MarketUtil.allowedTickers) {
@@ -107,12 +108,13 @@ public class Algorithms {
             if (klineData.isEmpty())
                 continue;
 
-            double macd = marketUtil.calculateMACD(klineData, maIntervalSmall, maIntervalBig);
-            double percent1 = marketUtil.calculatePercentChange(klineData, percentIntervals1);
-            double percent2 = marketUtil.calculatePercentChange(klineData, percentIntervals2);
+            double macd = marketUtil.calculateMACD(klineData, maRangeSmall, maRangeBig);
+            double percent1 = marketUtil.getPercentChange(klineData, percentRange1);
+            double percent2 = marketUtil.getPercentChange(klineData, percentRange2);
+            double volume = marketUtil.getTotalVolume(klineData, 6);
 
-            if(percent1 > percentMin1 && percent2 > percentMin2){
-                double[] rsiData = marketUtil.calculateRSIValues(klineData, rsiIntervals);
+            if(percent1 > percentMin1 && percent2 > percentMin2 && volume > volumeMin){
+                double[] rsiData = marketUtil.calculateRSIValues(klineData, rsiRange);
                 double MACD_RSI = (rsiData[rsiData.length - 1] + macd);
                 if (MACD_RSI < MACD_RSImax && MACD_RSI < best) {
                     bestTicker = ticker;

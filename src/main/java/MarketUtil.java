@@ -119,7 +119,7 @@ public class MarketUtil {
     }
 
     /*Gets the percent change from [range] kline's ago closing price to the most recent kline closing price*/
-    public double calculatePercentChange(List<Candlestick> candlesticks, int range){
+    public double getPercentChange(List<Candlestick> candlesticks, int range){
         Candlestick firstCandlestick = candlesticks.get(candlesticks.size()-(range+1));
         double firstClose = firstCandlestick.getClose();
         Candlestick lastCandlestick = candlesticks.get(candlesticks.size()-1);
@@ -146,14 +146,14 @@ public class MarketUtil {
     }
 
     /*Calculates the total volume over the last [range] klines*/
-    public double calculateTotalVolume(List<Candlestick> candlesticks, int range){
-        double avgVol = 0;
+    public double getTotalVolume(List<Candlestick> candlesticks, int range){
+        double Vol = 0;
         for (int i = 0; i < candlesticks.size()-1; i++) {
             if (i >= candlesticks.size()-1-range) {
-                avgVol += candlesticks.get(i).getVolume();
+                Vol += candlesticks.get(i).getVolume();
             }
         }
-        return avgVol;
+        return Vol;
     }
 
     public List<Candlestick> getKlineData(String symbol, String interval) {

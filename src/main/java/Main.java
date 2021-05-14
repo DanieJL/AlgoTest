@@ -92,7 +92,7 @@ public class Main {
 //RSI seems off?
 //Scale acceptable buys based on market conditions, positive tend = slightly looser reqs
 //Block things that had any major jumps in price?
+//Volatility implementing
 //Implement sentiment scalping?
-//Filter for more recent volume requirements?
 //Limit gains per day? (stop trading after x% gain (or loss) on a day?)
 
