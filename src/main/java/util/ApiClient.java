@@ -18,6 +18,7 @@ import java.util.Arrays;
 public class ApiClient {
 
     private final static Logger LOGGER = Logger.getLogger(ApiClient.class);
+
     public String makeAPICall(String url) throws IOException {
         String response_content;
 

@@ -118,8 +118,9 @@ public class MarketUtil {
         return max - (diff * level);
     }
 
-    public double calculatePercentChange(List<Candlestick> candlesticks, int intervals){
-        Candlestick firstCandlestick = candlesticks.get(candlesticks.size()-(intervals+1));
+    /*Gets the percent change from [range] kline's ago closing price to the most recent kline closing price*/
+    public double calculatePercentChange(List<Candlestick> candlesticks, int range){
+        Candlestick firstCandlestick = candlesticks.get(candlesticks.size()-(range+1));
         double firstClose = firstCandlestick.getClose();
         Candlestick lastCandlestick = candlesticks.get(candlesticks.size()-1);
         double lastClose = lastCandlestick.getClose();
@@ -127,20 +128,32 @@ public class MarketUtil {
         return ((100/firstClose) * lastClose);
     }
 
-    public double calculateMA(List<Candlestick> candlesticks, int intervals){
+    /*Gets the current moving average over the most recent [range] klines*/
+    public double calculateMA(List<Candlestick> candlesticks, int range){
         double MA = 0;
         for (int i = 0; i < candlesticks.size()-1; i++) {
-            if (i >= candlesticks.size()-1-intervals) {
+            if (i >= candlesticks.size()-1-range) {
                 MA += candlesticks.get(i).getClose();
             }
         }
-        MA = MA/intervals;
+        MA = MA/range;
         return MA;
     }
 
-    public double calculateMACD(List<Candlestick> candlesticks, int smallInterval, int bigInterval){
-        double MACD = ((calculateMA(candlesticks, smallInterval))/(calculateMA(candlesticks, bigInterval))) * 100;
-        return MACD;
+    /*Gets the percent difference between two different ranged moving averages*/
+    public double calculateMACD(List<Candlestick> candlesticks, int smallRange, int bigRange){
+        return (((calculateMA(candlesticks, smallRange))/(calculateMA(candlesticks, bigRange))) * 100);
+    }
+
+    /*Calculates the total volume over the last [range] klines*/
+    public double calculateTotalVolume(List<Candlestick> candlesticks, int range){
+        double avgVol = 0;
+        for (int i = 0; i < candlesticks.size()-1; i++) {
+            if (i >= candlesticks.size()-1-range) {
+                avgVol += candlesticks.get(i).getVolume();
+            }
+        }
+        return avgVol;
     }
 
     public List<Candlestick> getKlineData(String symbol, String interval) {
@@ -169,7 +182,8 @@ public class MarketUtil {
                 JSONArray stick = data.getJSONArray(i);
                 candlesticks.add(new Candlestick(stick.getLong(0),
                         Double.parseDouble(stick.getString(1)),
-                        Double.parseDouble(stick.getString(4))));
+                        Double.parseDouble(stick.getString(4)),
+                        Double.parseDouble(stick.getString(5))));
             }
             allCandlesticks.addAll(candlesticks);
             break;
