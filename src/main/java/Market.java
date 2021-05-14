@@ -66,8 +66,6 @@ public class Market {
         return accountVal;
     }
 
-    private int updateCycleCounter = 1;
-
     public void runMarketBot() {
         if (coinSymbol.length() != 0) {
             updateCurrent();
@@ -173,9 +171,7 @@ public class Market {
             //BUY CODE GOES HERE
             if (tradeConfirm(newTicker)) {
                 coinSymbol = newTicker;
-                trailingPercent = trailingPercentBase;
-                updateCurrent();
-                trailingStopValue = (coinValue - ((trailingPercentBase / 100.0) * coinValue));
+                accountVal -= (accountVal * ((Main.feePercent/100)/2));
                 updateCurrent();
                 String message = "[" + this.getName() + "] Bought " + coinSymbol + " at $" + coinValue + " [https://www.binance.us/en/trade/pro/" + coinSymbol + "]";
                 LOGGER.info(message);
@@ -194,9 +190,12 @@ public class Market {
                 String key = (String) it.next();
                 if (key.equals("price")) {
                     coinValue = data.getDouble(key);
-                    if (coinValuePaid == 0) {
+                    if (coinValuePaid == 0) { //just bought this
                         coinValuePaid = coinValue;
+                        numCoinsHeld = accountVal/coinValue;
+                        trailingStopValue = (coinValue - ((trailingPercentBase / 100.0) * coinValue));
                     }
+                    accountVal = numCoinsHeld * coinValue;
                     coinPercentChange = ((100 / coinValuePaid) * coinValue) - 100;
                     break;
                 }
@@ -215,10 +214,6 @@ public class Market {
                 }
                 trailingStopValue = (coinValuePeak - ((trailingPercent / 100.0) * coinValuePeak));
             }
-            if (numCoinsHeld == 0) {
-                numCoinsHeld = (accountVal - (accountVal * .01)) / coinValue;
-            }
-            accountVal = numCoinsHeld * coinValue;
         } catch (IOException | JSONException e) {
             LOGGER.error("Error: cannot access content - " + e.toString());
         }
@@ -230,8 +225,6 @@ public class Market {
             String message = "[" + this.getName() + "] Sold " + coinSymbol + " at $" + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%)";
             LOGGER.info(message);
             Main.UPDATER.sendUpdateMsg(message);
-            double newAccountVal = numCoinsHeld * coinValue;
-            newAccountVal = newAccountVal - (newAccountVal * .01);
 
             String d = LocalDateTime.now().format(formatter);
             try {
@@ -256,7 +249,7 @@ public class Market {
             coinValuePaid = 0;
             coinPercentChange = 0;
             numCoinsHeld = 0;
-            accountVal = newAccountVal;
+            accountVal -= (accountVal * ((Main.feePercent/100)/2));
             saveCurrentValues();
         }
     }

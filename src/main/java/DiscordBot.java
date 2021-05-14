@@ -11,11 +11,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.DecimalFormat;
 
 public class DiscordBot extends ListenerAdapter {
     private TextChannel channel = null;
 
     private final static Logger LOGGER = Logger.getLogger(DiscordBot.class);
+    private static final DecimalFormat df = new DecimalFormat("#.###");
 
     DiscordBot() {
         JDABuilder BOT = JDABuilder.createDefault(ConfigHandler.getBotConfig("discord.token"));
@@ -48,30 +50,20 @@ public class DiscordBot extends ListenerAdapter {
             System.exit(0);
         }
         for (Market market : Main.MARKETS) {
-            if (messageText.equals("!ping")) {
-                event.getChannel().sendMessage("PONG BITCH!").queue();
-                if (market.getCoinSymbol().equals("")) {
-                    this.channel.sendMessage(market.getName() + " is currently looking for a coin!").queue();
-                }
-            }
             if (messageText.contains("!sell")) {
                 String cmdSplit[] = messageText.split(" ", 3);
-                if (cmdSplit.length > 1 && cmdSplit[1].equals(market.getName())) {
+                if (cmdSplit.length > 1 && (cmdSplit[1].equals(market.getName()) || cmdSplit[1].equals("all"))) {
                     if (market.getCoinSymbol().equals("")) {
                         this.channel.sendMessage(market.getName() + " isn't holding anything to sell!").queue();
                     } else {
                         market.updateCurrent();
                         market.sellCurrent();
                     }
-                    break;
-                } else if (cmdSplit.length > 1) {
-                    continue;
+                    if(!cmdSplit[1].equals("all")) {break;}
                 }
-                if (market.getCoinSymbol().equals("")) {
-                    this.channel.sendMessage(market.getName() + " isn't holding anything to sell!").queue();
-                } else {
-                    market.updateCurrent();
-                    market.sellCurrent();
+                else {
+                    //this.channel.sendMessage("\"!sell [botname]\" or \"!sell all\"").queue();
+                    break;
                 }
             }
             if (messageText.equals("!data")) {
@@ -101,8 +93,9 @@ public class DiscordBot extends ListenerAdapter {
                     }
                     posAvg = posAvg / posCount;
                     negAvg = negAvg / negCount;
-                    String data = count + " trades: " + total + "%\nAdjusted: " + (total - ((count) * .15)) + "%\n\n" + //adjusted is assuming .075%x2 fee to buy and sell
-                            posCount + " positive trades: " + posAvg + "%/avg\n" + negCount + " negative trades: " + negAvg + "%/avg\nAccount Value: " + market.getAccountVal() + "\n\n";
+                    String data = "Account Value: " + market.getAccountVal() + "\n" + count + " trades: " + total +
+                            "%\nAdjusted: " + (total - ((count) * Main.feePercent)) + "%\n\n" + posCount + " positive trades: " + posAvg + "%/avg\n"
+                            + negCount + " negative trades: " + negAvg + "%/avg\n\n";
                     this.channel.sendMessage("```[" + market.getName() + "]\n" + data + "```").queue();
                 } catch (IOException e) {
                     this.channel.sendMessage("```[" + market.getName() + "] No sales completed by this bot.```").queue();

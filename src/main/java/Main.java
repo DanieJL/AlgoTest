@@ -14,6 +14,8 @@ import java.util.*;
 public class Main {
     public static final int CYCLE_TIME = 15;       //run the market test every X seconds
     public static final int UPDATE_CYCLE_TIME = 1; //how many minutes between each discord update (ends up taking longer because kline stuff)
+    public final static double feePercent = 1;     //estimated total fee as a % - per transactions (both buy/sell and spread)
+
     private static final DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("hh:mm a");
     private static final DecimalFormat df = new DecimalFormat("#.###");
 
@@ -23,7 +25,6 @@ public class Main {
     public static final String botListFile = "src/main/resources/BotList.json";
     public static final boolean persistData = true;
 
-    public static int updateCtr = 1;
     public static void main(String[] args) {
         new Timer().schedule(new TimerTask() {
             @Override
@@ -54,9 +55,10 @@ public class Main {
         return marketBots;
     }
 
+    public static int updateCtr = 1;
     private static void updates(List<Market> bots){
         String d = LocalDateTime.now().format(formatter2);
-        String msg = "```<" + d + ">";
+        String msg = "```<" + d + "> STATUS:";
         for(Market s : bots){
             msg+= "\n";
             if(s.getCoinSymbol().equals("")){
@@ -71,20 +73,11 @@ public class Main {
     }
 }
 
-//TODO: stuff
-
-//-- ConfigHandler added for this, add bot.config to resources folder
-//--format is key=value
-
-//Implement actual trading
-
-//**ALGO STUFF**
+//TODO: algo stuff
 //RSI seems off?
 //Scale acceptable buys based on market conditions, positive tend = slightly looser reqs
 //Block things that had any major jumps in price?
 //Implement sentiment scalping?
 //Filter for more recent volume requirements?
 //Limit gains per day? (stop trading after x% gain (or loss) on a day?)
-
-//have multiple market objects running different variables see how each perform.
 
