@@ -2,11 +2,13 @@ public class Candlestick {
     private Long openTime;
     private double open;
     private double close;
+    private double volume;
 
-    public Candlestick(Long openTime, double open, double close) {
+    public Candlestick(Long openTime, double open, double close, double volume) {
         this.openTime = openTime;
         this.open = open;
         this.close = close;
+        this.volume = volume;
 
     }
 
@@ -20,5 +22,9 @@ public class Candlestick {
 
     public double getClose() {
         return close;
+    }
+
+    public double getVolume() {
+        return volume;
     }
 }
