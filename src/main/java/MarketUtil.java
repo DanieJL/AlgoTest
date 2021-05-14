@@ -31,56 +31,56 @@ public class MarketUtil {
         }
     }
 
-    private double calcSmmaUp(List<Candlestick> candlesticks, double n, int i, double avgUt1){
+    private double calcSmmaUp(List<Candlestick> candlesticks, double n, int i, double avgUt1) {
 
-        if(avgUt1==0){
+        if (avgUt1 == 0) {
             double sumUpChanges = 0;
 
-            for(int j = 0; j < n; j++){
-                double change = candlesticks.get(i-j).getClose() - candlesticks.get(i-j).getOpen();
+            for (int j = 0; j < n; j++) {
+                double change = candlesticks.get(i - j).getClose() - candlesticks.get(i - j).getOpen();
 
-                if(change > 0){
-                    sumUpChanges+= change;
+                if (change > 0) {
+                    sumUpChanges += change;
                 }
             }
             return sumUpChanges / n;
-        }else {
+        } else {
             double change = candlesticks.get(i).getClose() - candlesticks.get(i).getOpen();
-            if(change < 0){
+            if (change < 0) {
                 change = 0;
             }
-            return ((avgUt1 * (n-1)) + change) / n ;
+            return ((avgUt1 * (n - 1)) + change) / n;
         }
 
     }
 
-    private double calcSmmaDown(List<Candlestick> candlesticks, double n, int i, double avgDt1){
-        if(avgDt1==0){
+    private double calcSmmaDown(List<Candlestick> candlesticks, double n, int i, double avgDt1) {
+        if (avgDt1 == 0) {
             double sumDownChanges = 0;
 
-            for(int j = 0; j < n; j++){
+            for (int j = 0; j < n; j++) {
                 double change = candlesticks.get(i - j).getClose() - candlesticks.get(i - j).getOpen();
 
-                if(change < 0){
-                    sumDownChanges-= change;
+                if (change < 0) {
+                    sumDownChanges -= change;
                 }
             }
             return sumDownChanges / n;
-        }else {
+        } else {
             double change = candlesticks.get(i).getClose() - candlesticks.get(i).getOpen();
-            if(change > 0){
+            if (change > 0) {
                 change = 0;
             }
-            return ((avgDt1 * (n-1)) - change) / n ;
+            return ((avgDt1 * (n - 1)) - change) / n;
         }
     }
 
-    public double[] calculateRSIValues(List<Candlestick> candlesticks, int n){
+    public double[] calculateRSIValues(List<Candlestick> candlesticks, int n) {
         double[] results = new double[candlesticks.size()];
         double ut1 = 0;
         double dt1 = 0;
-        for(int i = 0; i < candlesticks.size(); i++){
-            if(i<(n)){
+        for (int i = 0; i < candlesticks.size(); i++) {
+            if (i < (n)) {
                 continue;
             }
 
@@ -116,6 +116,31 @@ public class MarketUtil {
 
     private double getIndFibRetracement(double max, double diff, double level) {
         return max - (diff * level);
+    }
+
+    public double calculatePercentChange(List<Candlestick> candlesticks, int intervals){
+        Candlestick firstCandlestick = candlesticks.get(candlesticks.size()-(intervals+1));
+        double firstClose = firstCandlestick.getClose();
+        Candlestick lastCandlestick = candlesticks.get(candlesticks.size()-1);
+        double lastClose = lastCandlestick.getClose();
+
+        return ((100/firstClose) * lastClose);
+    }
+
+    public double calculateMA(List<Candlestick> candlesticks, int intervals){
+        double MA = 0;
+        for (int i = 0; i < candlesticks.size()-1; i++) {
+            if (i >= candlesticks.size()-1-intervals) {
+                MA += candlesticks.get(i).getClose();
+            }
+        }
+        MA = MA/intervals;
+        return MA;
+    }
+
+    public double calculateMACD(List<Candlestick> candlesticks, int smallInterval, int bigInterval){
+        double MACD = ((calculateMA(candlesticks, smallInterval))/(calculateMA(candlesticks, bigInterval))) * 100;
+        return MACD;
     }
 
     public List<Candlestick> getKlineData(String symbol, String interval) {

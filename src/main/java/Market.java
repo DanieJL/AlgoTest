@@ -14,8 +14,6 @@ import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 public class Market {
     private final static Logger LOGGER = Logger.getLogger(Market.class);
@@ -113,7 +111,6 @@ public class Market {
             } catch (IOException | ParseException e) {
                 e.printStackTrace();
             }
-
             try (FileWriter file = new FileWriter(Main.botListFile)) {
                 file.write(new JSONArray(marketJsonArr.toJSONString()).toString(4));
                 file.flush();
@@ -149,10 +146,8 @@ public class Market {
         } catch (IOException | ParseException e) {
             e.printStackTrace();
         }
-
     }
 
-    /*ALGO GOES HERE*/
     public String findNew(KlineDatapack klineData) {
         Algorithms algos = new Algorithms(klineData);
         return switch (algoName) {
@@ -167,7 +162,7 @@ public class Market {
             //BUY CODE GOES HERE
             if (tradeConfirm(newTicker)) {
                 coinSymbol = newTicker;
-                accountVal -= (accountVal * ((Main.feePercent/100)/2));
+                accountVal -= (accountVal * ((Main.feePercent / 100) / 2));
                 updateCurrent();
                 String message = "[" + this.getName() + "] Bought " + coinSymbol + " at $" + coinValue + " [https://www.binance.us/en/trade/pro/" + coinSymbol + "]";
                 LOGGER.info(message);
@@ -188,7 +183,7 @@ public class Market {
                     coinValue = data.getDouble(key);
                     if (coinValuePaid == 0) { //just bought this
                         coinValuePaid = coinValue;
-                        numCoinsHeld = accountVal/coinValue;
+                        numCoinsHeld = accountVal / coinValue;
                         trailingStopValue = (coinValue - ((trailingPercentBase / 100.0) * coinValue));
                     }
                     accountVal = numCoinsHeld * coinValue;
@@ -245,11 +240,11 @@ public class Market {
             coinValuePaid = 0;
             coinPercentChange = 0;
             numCoinsHeld = 0;
-            accountVal -= (accountVal * ((Main.feePercent/100)/2));
+            accountVal -= (accountVal * ((Main.feePercent / 100) / 2));
             saveCurrentValues();
         }
     }
-    
+
     public void resetBot() {
         this.coinSymbol = "";
         this.coinValue = 0;

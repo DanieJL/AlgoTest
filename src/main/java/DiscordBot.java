@@ -35,7 +35,9 @@ public class DiscordBot extends ListenerAdapter {
     /*WILL NEED TO MAKE SURE COMMANDS CANNOT INTERRUPT THINGS THAT DESYNC BOT (Like starting a sell while it's already trying to confirm a sell)*/
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (event.getAuthor().isBot()) {return;}
+        if (event.getAuthor().isBot()) {
+            return;
+        }
 
         String messageText = event.getMessage().getContentRaw();
         if (!event.getChannel().getId().equals(channel.getId()))
@@ -59,14 +61,16 @@ public class DiscordBot extends ListenerAdapter {
                         market.updateCurrent();
                         market.sellCurrent();
                     }
-                    if(!cmdSplit[1].equals("all")) {break;}
+                    if (!cmdSplit[1].equals("all")) {
+                        break;
+                    }
                 }
             }
             if (messageText.equals("!data")) {
                 try {
                     File dir = new File("sellLogs");
                     dir.mkdir();
-                    File file = new File(dir,market.getName() + "_sellLog.txt");
+                    File file = new File(dir, market.getName() + "_sellLog.txt");
                     BufferedReader br = new BufferedReader(new FileReader(file));
                     String st;
                     int posCount = 0;
@@ -90,15 +94,15 @@ public class DiscordBot extends ListenerAdapter {
                     posAvg = posAvg / posCount;
                     negAvg = negAvg / negCount;
                     String current = "Searching...";
-                    if(!market.getCoinSymbol().isEmpty()) {
-                        count+=.5;
+                    if (!market.getCoinSymbol().isEmpty()) {
+                        count += .5;
                         current = market.getCoinSymbol() + " " + df.format(market.getCoinValue()) + " (" + df.format(market.getCoinPercentChange()) + "%)";
                     }
-                    double percentGain = ((.1*market.getAccountVal()) - 100);
-                    String data = "Account Value: " + df.format(market.getAccountVal()) + " ("+ df.format(percentGain) + "%)\n"
+                    double percentGain = ((.1 * market.getAccountVal()) - 100);
+                    String data = "Account Value: " + df.format(market.getAccountVal()) + " (" + df.format(percentGain) + "%)\n"
                             + "Current: " + current + "\n\n"
                             + count + " trades: " + df.format(total) + "%\n"
-                            + "With " + Main.feePercent + "% fee/trade: " + df.format((total - (count*Main.feePercent))) + "%\n"
+                            + "With " + Main.feePercent + "% fee/trade: " + df.format((total - (count * Main.feePercent))) + "%\n"
                             + posCount + " positive trades: " + df.format(posAvg) + "%/avg\n"
                             + negCount + " negative trades: " + df.format(negAvg) + "%/avg";
                     this.channel.sendMessage("```[" + market.getName() + "]\n" + data + "```").queue();
@@ -111,13 +115,15 @@ public class DiscordBot extends ListenerAdapter {
                 if (cmdSplit.length > 1 && (cmdSplit[1].equals(market.getName()) || cmdSplit[1].equals("all"))) {
                     market.resetBot();
                     this.channel.sendMessage("```[" + market.getName() + "] Reset Successfully.```").queue();
-                    if(!cmdSplit[1].equals("all")) {break;}
+                    if (!cmdSplit[1].equals("all")) {
+                        break;
+                    }
                 }
             }
         }
     }
 
-    public void sendUpdateMsg(String msg){
+    public void sendUpdateMsg(String msg) {
         this.channel.sendMessage(msg).queue();
     }
 }
