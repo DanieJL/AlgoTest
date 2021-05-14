@@ -32,10 +32,12 @@ public class Main {
             public void run() {
                 KlineDatapack klineData = getKlineData();
                 MARKETS.forEach(market -> market.runMarketBot(klineData));
-                if(updateCtr<=1){
+                if (updateCtr <= 1) {
                     updates(MARKETS);
-                    updateCtr = ((UPDATE_CYCLE_TIME*60)/CYCLE_TIME);
-                } else {updateCtr--;}
+                    updateCtr = ((UPDATE_CYCLE_TIME * 60) / CYCLE_TIME);
+                } else {
+                    updateCtr--;
+                }
 
             }
         }, 0, 1000L * CYCLE_TIME);
@@ -58,15 +60,15 @@ public class Main {
     }
 
     public static int updateCtr = 1;
-    private static void updates(List<Market> bots){
+
+    private static void updates(List<Market> bots) {
         String d = LocalDateTime.now().format(formatter2);
         String msg = "```<" + d + "> STATUS:";
-        for(Market s : bots){
-            msg+= "\n";
-            if(s.getCoinSymbol().equals("")){
+        for (Market s : bots) {
+            msg += "\n";
+            if (s.getCoinSymbol().equals("")) {
                 msg += "[" + s.getName() + "] " + "Searching...";
-            }
-            else{
+            } else {
                 msg += "[" + s.getName() + "] " + s.getCoinSymbol() + " " + df.format(s.getCoinValue()) + " (" + df.format(s.getCoinPercentChange()) + "%)";
             }
         }
