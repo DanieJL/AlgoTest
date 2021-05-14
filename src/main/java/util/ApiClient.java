@@ -16,8 +16,9 @@ import java.io.IOException;
 import java.util.Arrays;
 
 public class ApiClient {
+
     private final static Logger LOGGER = Logger.getLogger(ApiClient.class);
-    public static String makeAPICall(String url) throws IOException {
+    public String makeAPICall(String url) throws IOException {
         String response_content;
 
         CloseableHttpClient client = HttpClients.createDefault();
@@ -45,7 +46,7 @@ public class ApiClient {
         return response_content;
     }
 
-    public static boolean isValidJsonArr(String jsonString) {
+    public boolean isValidJsonArr(String jsonString) {
         try {
             new JSONArray(jsonString);
             return true;

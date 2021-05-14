@@ -1,4 +1,5 @@
 
+import enums.KlineInterval;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -29,7 +30,8 @@ public class Main {
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
-                MARKETS.forEach(Market::runMarketBot);
+                KlineDatapack klineData = getKlineData();
+                MARKETS.forEach(market -> market.runMarketBot(klineData));
                 if(updateCtr<=1){
                     updates(MARKETS);
                     updateCtr = ((UPDATE_CYCLE_TIME*60)/CYCLE_TIME);
@@ -70,6 +72,17 @@ public class Main {
         }
         msg += "```";
         Main.UPDATER.sendUpdateMsg(msg);
+    }
+
+    public static KlineDatapack getKlineData() {
+        MarketUtil marketUtil = new MarketUtil();
+        KlineDatapack klineData = new KlineDatapack();
+        if (MARKETS.stream().anyMatch(market -> market.getCoinSymbol().equalsIgnoreCase(""))) {
+            Map<String, List<Candlestick>> kline4h = marketUtil.getKlineForAllTickers(KlineInterval.FOUR_HOUR);
+            klineData.setKline4hData(kline4h);
+        }
+
+        return klineData;
     }
 }
 

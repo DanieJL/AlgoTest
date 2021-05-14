@@ -14,11 +14,15 @@ import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 public class Market {
     private final static Logger LOGGER = Logger.getLogger(Market.class);
     private static final DecimalFormat df = new DecimalFormat("#.###");
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy hh:mm a");
+
+    private final ApiClient apiClient;
 
     private final double trailingPercentBase = 2;   //the percent you want the stop loss trail to start at
 
@@ -34,16 +38,11 @@ public class Market {
     private String algoName = "default";
     private double numCoinsHeld = 0;
     private double accountVal = 1000;
-    private static Algorithms algos;
-
-    Market() {
-        loadCurrentValues();
-    }
 
     Market(String name) {
         this.name = name;
         loadCurrentValues();
-        algos = new Algorithms();
+        apiClient = new ApiClient();
     }
 
     public String getName() {
@@ -66,15 +65,15 @@ public class Market {
         return accountVal;
     }
 
-    public void runMarketBot() {
+    public void runMarketBot(KlineDatapack klineData) {
         if (coinSymbol.length() != 0) {
             updateCurrent();
             if (coinValue < trailingStopValue) {
                 sellCurrent();
-                buyNew(findNew());
+                buyNew(findNew(klineData));
             }
         } else {
-            buyNew(findNew());
+            buyNew(findNew(klineData));
         }
         saveCurrentValues();
     }
@@ -115,13 +114,9 @@ public class Market {
                 e.printStackTrace();
             }
 
-
-            //Write JSON file
             try (FileWriter file = new FileWriter(Main.botListFile)) {
-                //We can write any JSONArray or JSONObject instance to the file
                 file.write(new JSONArray(marketJsonArr.toJSONString()).toString(4));
                 file.flush();
-
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -158,11 +153,12 @@ public class Market {
     }
 
     /*ALGO GOES HERE*/
-    public String findNew() {
+    public String findNew(KlineDatapack klineData) {
+        Algorithms algos = new Algorithms(klineData);
         return switch (algoName) {
             case "fib" -> algos.fib618();
             case "rsiAndFib" -> algos.rsiAndFib();
-            default -> algos.rsiGt60();
+            default -> algos.rsiLT30();
         };
     }
 
@@ -184,7 +180,7 @@ public class Market {
     public void updateCurrent() {
         String url = "https://www.binance.us/api/v3/ticker/price?symbol=" + coinSymbol;
         try {
-            String JSON_DATA = ApiClient.makeAPICall(url);
+            String JSON_DATA = apiClient.makeAPICall(url);
             JSONObject data = new JSONObject(JSON_DATA);
             for (Iterator it = data.keys(); it.hasNext(); ) {
                 String key = (String) it.next();
