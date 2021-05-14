@@ -12,6 +12,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.Comparator;
+import java.util.List;
 
 public class DiscordBot extends ListenerAdapter {
     private TextChannel channel = null;
@@ -51,6 +53,7 @@ public class DiscordBot extends ListenerAdapter {
             GeneralUtil.waitSeconds(5);
             System.exit(0);
         }
+        Main.MARKETS.sort(Comparator.comparing(Market::getAccountVal).reversed());
         for (Market market : Main.MARKETS) {
             if (messageText.contains("!sell")) {
                 String[] cmdSplit = messageText.split(" ", 3);
