@@ -83,10 +83,8 @@ public class Main {
     public static KlineDatapack getKlineData() {
         MarketUtil marketUtil = new MarketUtil();
         KlineDatapack klineData = new KlineDatapack();
-        if (MARKETS.stream().anyMatch(market -> market.getCoinSymbol().equalsIgnoreCase(""))) {
-            Map<String, List<Candlestick>> kline1m = marketUtil.getKlineForAllTickers(KlineInterval.ONE_MINUTE);
-            klineData.setKline1mData(kline1m);
-        }
+        Map<String, List<Candlestick>> kline1m = marketUtil.getKlineForAllTickers(KlineInterval.ONE_MINUTE);
+        klineData.setKline1mData(kline1m);
         return klineData;
     }
 
