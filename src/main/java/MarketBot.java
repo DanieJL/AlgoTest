@@ -161,35 +161,37 @@ public class MarketBot {
 
     public String findNew(KlineDatapack klineData) {
         Algorithms algos = new Algorithms(klineData);
+        if (klineData == null)
+            return "";
         return switch (algoName) {
             case "fib" -> algos.fib618();
             case "rsiAndFib" -> algos.rsiAndFib();
-            case "MACD_RSI_130A" -> algos.RSI_MACD_PER(130,14,7,25, 20,99.5,40,101,6, 10000);
-            case "MACD_RSI_130B" -> algos.RSI_MACD_PER(130,14,14,60, 20,100,40,102,6, 10000);
-            case "MACD_RSI_130C" -> algos.RSI_MACD_PER(130,14,7,25, 20,0,40,0,6, 10000);
-            case "MACD_RSI_130D" -> algos.RSI_MACD_PER(130,14,14,60, 20,0,40,0, 6,10000);
-            case "MACD_RSI_127A" -> algos.RSI_MACD_PER(127,14,7,25, 20,99.5,40,101,6, 10000);
-            case "MACD_RSI_127B" -> algos.RSI_MACD_PER(127,14,14,60, 20,100,40,102,6, 10000);
-            case "MACD_RSI_127C" -> algos.RSI_MACD_PER(127,14,7,25, 20,0,40,0,6, 10000);
-            case "MACD_RSI_127D" -> algos.RSI_MACD_PER(127,14,14,60, 20,0,40,0,6, 10000);
-            case "MACD_RSI_125A" -> algos.RSI_MACD_PER(125,14,7,25, 20,99.5,40,101, 6,10000);
-            case "MACD_RSI_125B" -> algos.RSI_MACD_PER(125,14,14,60, 20,100,40,102,6, 10000);
-            case "MACD_RSI_125C" -> algos.RSI_MACD_PER(125,14,7,25, 20,0,40,0, 6,10000);
-            case "MACD_RSI_125D" -> algos.RSI_MACD_PER(125,14,14,60, 20,0,40,0,6, 10000);
-            case "MACD_RSI_122A" -> algos.RSI_MACD_PER(122,14,7,25, 20,99.5,40,101, 6,10000);
-            case "MACD_RSI_122B" -> algos.RSI_MACD_PER(122,14,14,60, 20,100,40,102,6, 10000);
-            case "MACD_RSI_122C" -> algos.RSI_MACD_PER(122,14,7,25, 20,0,40,0,6, 10000);
-            case "MACD_RSI_122D" -> algos.RSI_MACD_PER(122,14,14,60, 20,0,40,0,6,10000);
-            case "40RSI_Fib03" -> algos.lowRSIanyFib(40,.03, 10000);
-            case "30RSI_Fib01" -> algos.lowRSIanyFib(30,.01, 10000);
-            case "30RSI_Fib02" -> algos.lowRSIanyFib(30,.02, 10000);
-            case "30RSI_Fib03" -> algos.lowRSIanyFib(30,.03, 10000);
-            case "28RSI_Fib01" -> algos.lowRSIanyFib(28,.01, 10000);
-            case "28RSI_Fib02" -> algos.lowRSIanyFib(28,.02, 10000);
-            case "28RSI_Fib03" -> algos.lowRSIanyFib(28,.03, 10000);
-            case "25RSI_Fib01" -> algos.lowRSIanyFib(25,.01, 10000);
-            case "25RSI_Fib02" -> algos.lowRSIanyFib(25,.02, 10000);
-            case "25RSI_Fib03" -> algos.lowRSIanyFib(25,.03, 10000);
+            case "MACD_RSI_130A" -> algos.RSI_MACD_PER(130, 14, 7, 25, 20, 99.5, 40, 101, 6, 10000);
+            case "MACD_RSI_130B" -> algos.RSI_MACD_PER(130, 14, 14, 60, 20, 100, 40, 102, 6, 10000);
+            case "MACD_RSI_130C" -> algos.RSI_MACD_PER(130, 14, 7, 25, 20, 0, 40, 0, 6, 10000);
+            case "MACD_RSI_130D" -> algos.RSI_MACD_PER(130, 14, 14, 60, 20, 0, 40, 0, 6, 10000);
+            case "MACD_RSI_127A" -> algos.RSI_MACD_PER(127, 14, 7, 25, 20, 99.5, 40, 101, 6, 10000);
+            case "MACD_RSI_127B" -> algos.RSI_MACD_PER(127, 14, 14, 60, 20, 100, 40, 102, 6, 10000);
+            case "MACD_RSI_127C" -> algos.RSI_MACD_PER(127, 14, 7, 25, 20, 0, 40, 0, 6, 10000);
+            case "MACD_RSI_127D" -> algos.RSI_MACD_PER(127, 14, 14, 60, 20, 0, 40, 0, 6, 10000);
+            case "MACD_RSI_125A" -> algos.RSI_MACD_PER(125, 14, 7, 25, 20, 99.5, 40, 101, 6, 10000);
+            case "MACD_RSI_125B" -> algos.RSI_MACD_PER(125, 14, 14, 60, 20, 100, 40, 102, 6, 10000);
+            case "MACD_RSI_125C" -> algos.RSI_MACD_PER(125, 14, 7, 25, 20, 0, 40, 0, 6, 10000);
+            case "MACD_RSI_125D" -> algos.RSI_MACD_PER(125, 14, 14, 60, 20, 0, 40, 0, 6, 10000);
+            case "MACD_RSI_122A" -> algos.RSI_MACD_PER(122, 14, 7, 25, 20, 99.5, 40, 101, 6, 10000);
+            case "MACD_RSI_122B" -> algos.RSI_MACD_PER(122, 14, 14, 60, 20, 100, 40, 102, 6, 10000);
+            case "MACD_RSI_122C" -> algos.RSI_MACD_PER(122, 14, 7, 25, 20, 0, 40, 0, 6, 10000);
+            case "MACD_RSI_122D" -> algos.RSI_MACD_PER(122, 14, 14, 60, 20, 0, 40, 0, 6, 10000);
+            case "40RSI_Fib03" -> algos.lowRSIanyFib(40, .03, 10000);
+            case "30RSI_Fib01" -> algos.lowRSIanyFib(30, .01, 10000);
+            case "30RSI_Fib02" -> algos.lowRSIanyFib(30, .02, 10000);
+            case "30RSI_Fib03" -> algos.lowRSIanyFib(30, .03, 10000);
+            case "28RSI_Fib01" -> algos.lowRSIanyFib(28, .01, 10000);
+            case "28RSI_Fib02" -> algos.lowRSIanyFib(28, .02, 10000);
+            case "28RSI_Fib03" -> algos.lowRSIanyFib(28, .03, 10000);
+            case "25RSI_Fib01" -> algos.lowRSIanyFib(25, .01, 10000);
+            case "25RSI_Fib02" -> algos.lowRSIanyFib(25, .02, 10000);
+            case "25RSI_Fib03" -> algos.lowRSIanyFib(25, .03, 10000);
             default -> algos.rsiLT30();
         };
     }

@@ -1,4 +1,3 @@
-
 import enums.KlineInterval;
 import org.apache.log4j.Logger;
 import org.json.simple.JSONArray;
@@ -29,13 +28,17 @@ public class Main {
     public static final boolean persistData = true;
 
     private static boolean busy = false;         //a check to keep commands from interrupting runMarketBot procedures
-    public static boolean getBusyMarket() {return busy;}
 
-    public static final boolean backtest = false;
+    public static boolean getBusyMarket() {
+        return busy;
+    }
+
+    public static final boolean backtest = true;
     public static final int backtestDateDeltaInDays = 30;
     public static final KlineInterval backtestInterval = KlineInterval.ONE_MINUTE;
 
     public static void main(String[] args) {
+        busy = true;
         if (backtest) {
             for (MarketBot marketBot : MARKETBots) {
                 marketBot.resetBot();
@@ -53,9 +56,11 @@ public class Main {
                     LOGGER.info("End of backtest.");
                     break;
                 }
-                intervalKeeperPack.setKline1mData(klineData.getKline1mDataIncremented(i));
+                intervalKeeperPack.setKline1mData(incrementedData);
+                marketPerformance = calculateMarketPerformance(intervalKeeperPack, 120);
                 MARKETBots.forEach(marketBot -> marketBot.runMarketBot(intervalKeeperPack));
             }
+            busy = false;
             UPDATER.sendUpdateMsg("Backtest Completed.");
         } else {
             for (MarketBot marketBot : MARKETBots) {
@@ -97,9 +102,10 @@ public class Main {
     }
 
     public static int updateCtr = 1;
+
     private static void updates(List<MarketBot> bots) {
         String d = LocalDateTime.now().format(formatter2);
-        String msg = "[" + d + "] Status update: (MP: " + df.format(Main.marketPerformance)  + "%)\n```";
+        String msg = "[" + d + "] Status update: (MP: " + df.format(Main.marketPerformance) + "%)\n```";
         for (MarketBot s : bots) {
             msg += "\n";
             if (s.getCoinSymbol().equals("")) {
@@ -121,24 +127,28 @@ public class Main {
     }
 
     private static double marketPerformance = 0;
-    public static double getMarketPerformance() {return marketPerformance;}
 
-    private static double calculateMarketPerformance(KlineDatapack data, int rangeInMinutes){
+    public static double getMarketPerformance() {
+        return marketPerformance;
+    }
+
+    private static double calculateMarketPerformance(KlineDatapack data, int rangeInMinutes) {
         double totalVol = 0;
         double weightPts = 0;
         for (String ticker : MarketUtil.allowedTickers) {
             List<Candlestick> klineData = data.getKline1mData().get(ticker);
             if (klineData == null || klineData.isEmpty())
                 continue;
-            double start = klineData.get(klineData.size()-1-rangeInMinutes).getClose();
-            double end = klineData.get(klineData.size()-1).getClose();
-            double percentChange = ((end-start)/start) * 100;
-            double volume = MarketUtil.getUSDVolumeAvg(klineData,rangeInMinutes);
+            double start = klineData.get(klineData.size() - 1 - rangeInMinutes).getClose();
+            double end = klineData.get(klineData.size() - 1).getClose();
+            double percentChange = ((end - start) / start) * 100;
+            double volume = MarketUtil.getUSDVolumeAvg(klineData, rangeInMinutes);
 
             totalVol += volume;
             weightPts += percentChange * volume;
         }
-        return weightPts/totalVol;
+        LOGGER.info("Mkt=" + weightPts / totalVol);
+        return weightPts / totalVol;
     }
 
     public static KlineDatapack getBacktestData(int backtestDateDeltaInDays, KlineInterval backtestInterval) {

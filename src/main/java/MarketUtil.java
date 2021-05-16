@@ -122,41 +122,41 @@ public class MarketUtil {
     }
 
     /*Gets the percent change from [range] kline's ago closing price to the most recent kline closing price*/
-    public double getPercentChange(List<Candlestick> candlesticks, int range){
-        Candlestick firstCandlestick = candlesticks.get(candlesticks.size()-(range+1));
+    public double getPercentChange(List<Candlestick> candlesticks, int range) {
+        Candlestick firstCandlestick = candlesticks.get(candlesticks.size() - (range + 1));
         double firstClose = firstCandlestick.getClose();
-        Candlestick lastCandlestick = candlesticks.get(candlesticks.size()-1);
+        Candlestick lastCandlestick = candlesticks.get(candlesticks.size() - 1);
         double lastClose = lastCandlestick.getClose();
 
-        return ((100/firstClose) * lastClose);
+        return ((100 / firstClose) * lastClose);
     }
 
     /*Gets the current moving average over the most recent [range] klines*/
-    public double calculateMA(List<Candlestick> candlesticks, int range){
+    public double calculateMA(List<Candlestick> candlesticks, int range) {
         double MA = 0;
-        for (int i = 0; i < candlesticks.size()-1; i++) {
-            if (i >= candlesticks.size()-1-range) {
+        for (int i = 0; i < candlesticks.size() - 1; i++) {
+            if (i >= candlesticks.size() - 1 - range) {
                 MA += candlesticks.get(i).getClose();
             }
         }
-        MA = MA/range;
+        MA = MA / range;
         return MA;
     }
 
     /*Gets the percent difference between two different ranged moving averages*/
-    public double calculateMACD(List<Candlestick> candlesticks, int smallRange, int bigRange){
-        return (((calculateMA(candlesticks, smallRange))/(calculateMA(candlesticks, bigRange))) * 100);
+    public double calculateMACD(List<Candlestick> candlesticks, int smallRange, int bigRange) {
+        return (((calculateMA(candlesticks, smallRange)) / (calculateMA(candlesticks, bigRange))) * 100);
     }
 
     /*Calculates the total volume over the last [range] klines*/
-    public static double getUSDVolumeAvg(List<Candlestick> candlesticks, int range){
+    public static double getUSDVolumeAvg(List<Candlestick> candlesticks, int range) {
         double Vol = 0;
-        for (int i = 0; i < candlesticks.size()-1; i++) {
-            if (i >= candlesticks.size()-1-range) {
+        for (int i = 0; i < candlesticks.size() - 1; i++) {
+            if (i >= candlesticks.size() - 1 - range) {
                 Vol += candlesticks.get(i).getVolume();
             }
         }
-        return Vol/range;
+        return Vol / range;
     }
 
     public List<Candlestick> getKlineData(String symbol, String interval, int daysAgo) {

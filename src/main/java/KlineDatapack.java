@@ -38,11 +38,11 @@ public class KlineDatapack {
     public Map<String, List<Candlestick>> getKline1mDataIncremented(int minutes) {
         Map<String, List<Candlestick>> newMap = new HashMap<>();
         for (String ticker : MarketUtil.allowedTickers) {
-            if (minutes + 999 > kline1mData.get(ticker).size()) {
-                return newMap;
+            List<Candlestick> newK;
+            if (minutes + 999 <= kline1mData.get(ticker).size()) {
+                newK = kline1mData.get(ticker).subList(minutes, minutes + 999);
+                newMap.put(ticker, newK);
             }
-            List<Candlestick> newK = kline1mData.get(ticker).subList(minutes, minutes + 999);
-            newMap.put(ticker, newK);
         }
         return newMap;
     }
