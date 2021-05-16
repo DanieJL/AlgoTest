@@ -7,19 +7,17 @@ import util.ConfigHandler;
 import util.GeneralUtil;
 
 import javax.security.auth.login.LoginException;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.text.DecimalFormat;
+import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
 
 public class DiscordBot extends ListenerAdapter {
     private TextChannel channel = null;
 
     private final static Logger LOGGER = Logger.getLogger(DiscordBot.class);
     private static final DecimalFormat df = new DecimalFormat("#.###");
+
 
     DiscordBot() {
         JDABuilder BOT = JDABuilder.createDefault(ConfigHandler.getBotConfig("discord.token"));
@@ -53,77 +51,145 @@ public class DiscordBot extends ListenerAdapter {
             GeneralUtil.waitSeconds(5);
             System.exit(0);
         }
-        Main.MARKETS.sort(Comparator.comparing(Market::getAccountVal).reversed());
-        for (Market market : Main.MARKETS) {
-            if (messageText.contains("!sell")) {
-                String[] cmdSplit = messageText.split(" ", 3);
-                if (cmdSplit.length > 1 && (cmdSplit[1].equals(market.getName()) || cmdSplit[1].equals("all"))) {
-                    if (market.getCoinSymbol().equals("")) {
-                        this.channel.sendMessage(market.getName() + " isn't holding anything to sell!").queue();
-                    } else {
-                        market.updateCurrent();
-                        market.sellCurrent();
-                    }
-                    if (!cmdSplit[1].equals("all")) {
-                        break;
-                    }
-                }
-            }
-            if (messageText.equals("!data")) {
-                try {
-                    File dir = new File("sellLogs");
-                    dir.mkdir();
-                    File file = new File(dir, market.getName() + "_sellLog.txt");
-                    BufferedReader br = new BufferedReader(new FileReader(file));
-                    String st;
-                    int posCount = 0;
-                    double posAvg = 0;
-                    int negCount = 0;
-                    double negAvg = 0;
-                    double total = 0;
-                    double count = 0;
-                    while ((st = br.readLine()) != null) {
-                        double value = Double.parseDouble(st.substring(st.lastIndexOf("(") + 1, st.lastIndexOf("%")));
-                        total += value;
-                        if (value > 0) {
-                            posCount++;
-                            posAvg += value;
+        if(!Main.getBusyMarket()) { //make sure these commands cannot interfere with bot, simultaneous stuff causes crash
+            Main.MARKETS.sort(Comparator.comparing(Market::getAccountVal).reversed());
+            String[] MPcurrentBestName = new String[Market.mpRanges.length];                    //the current best performers in each range
+            double[] MPcurrentBestValue = new double[Market.mpRanges.length];
+            int[] MPcurrentBestTradeCount = new int[Market.mpRanges.length];
+            for (Market market : Main.MARKETS) {
+                if (messageText.contains("!sell")) {
+                    String[] cmdSplit = messageText.split(" ", 3);
+                    if (cmdSplit.length > 1 && (cmdSplit[1].equals(market.getName()) || cmdSplit[1].equals("all"))) {
+                        if (market.getCoinSymbol().equals("")) {
+                            this.channel.sendMessage(market.getName() + " isn't holding anything to sell!").queue();
                         } else {
-                            negCount++;
-                            negAvg += value;
+                            market.updateCurrent();
+                            market.sellCurrent();
                         }
-                        count++;
+                        if (!cmdSplit[1].equals("all")) {
+                            break;
+                        }
                     }
-                    posAvg = posAvg / posCount;
-                    negAvg = negAvg / negCount;
-                    String current = "Searching...";
-                    if (!market.getCoinSymbol().isEmpty()) {
-                        count += .5;
-                        current = market.getCoinSymbol() + " " + df.format(market.getCoinValue()) + " (" + df.format(market.getCoinPercentChange()) + "%)";
+                }
+                if (messageText.equals("!data")) {
+                    try {
+                        File dir = new File("sellLogs");
+                        dir.mkdir();
+                        File file = new File(dir, market.getName() + "_sellLog.txt");
+                        BufferedReader br = new BufferedReader(new FileReader(file));
+                        String st;
+                        int posCount = 0;
+                        double posAvg = 0;
+                        int negCount = 0;
+                        double negAvg = 0;
+                        double total = 0;
+                        double count = 0;
+                        while ((st = br.readLine()) != null) {
+                            double value = Double.parseDouble(st.substring(st.lastIndexOf("(") + 1, st.lastIndexOf("%")));
+                            total += value;
+                            if (value > 0) {
+                                posCount++;
+                                posAvg += value;
+                            } else {
+                                negCount++;
+                                negAvg += value;
+                            }
+                            count++;
+                        }
+                        posAvg = posAvg / posCount;
+                        negAvg = negAvg / negCount;
+                        String current = "Searching...";
+                        if (!market.getCoinSymbol().isEmpty()) {
+                            count += .5;
+                            current = market.getCoinSymbol() + " " + df.format(market.getCoinValue()) + " (" + df.format(market.getCoinPercentChange()) + "%)";
+                        }
+                        double percentGain = ((.1 * market.getAccountVal()) - 100);
+                        String data = "Account Value: " + df.format(market.getAccountVal()) + " (" + df.format(percentGain) + "%)\n"
+                                + "Current: " + current + "\n\n"
+                                + count + " trades: " + df.format(total) + "%\n"
+                                + "With " + Main.feePercent + "% fee/trade: " + df.format((total - (count * Main.feePercent))) + "%\n"
+                                + posCount + " positive trades: " + df.format(posAvg) + "%/avg\n"
+                                + negCount + " negative trades: " + df.format(negAvg) + "%/avg";
+                        this.channel.sendMessage("```[" + market.getName() + "]\n" + data + "```").queue();
+                    } catch (IOException e) {
+                        this.channel.sendMessage("```[" + market.getName() + "] No sales completed by this bot.```").queue();
                     }
-                    double percentGain = ((.1 * market.getAccountVal()) - 100);
-                    String data = "Account Value: " + df.format(market.getAccountVal()) + " (" + df.format(percentGain) + "%)\n"
-                            + "Current: " + current + "\n\n"
-                            + count + " trades: " + df.format(total) + "%\n"
-                            + "With " + Main.feePercent + "% fee/trade: " + df.format((total - (count * Main.feePercent))) + "%\n"
-                            + posCount + " positive trades: " + df.format(posAvg) + "%/avg\n"
-                            + negCount + " negative trades: " + df.format(negAvg) + "%/avg";
-                    this.channel.sendMessage("```[" + market.getName() + "]\n" + data + "```").queue();
-                } catch (IOException e) {
-                    this.channel.sendMessage("```[" + market.getName() + "] No sales completed by this bot.```").queue();
+                }
+                if (messageText.contains("!reset")) {
+                    String[] cmdSplit = messageText.split(" ", 3);
+                    if (cmdSplit.length > 1 && (cmdSplit[1].equals(market.getName()) || cmdSplit[1].equals("all"))) {
+                        market.resetBot();
+                        this.channel.sendMessage("```[" + market.getName() + "] Reset Successfully.```").queue();
+                        if (!cmdSplit[1].equals("all")) {
+                            break;
+                        }
+                    }
+                }
+
+                if(messageText.contains("!mp")) {
+                    String[] cmdSplit = messageText.split(" ", 3);
+                    if (cmdSplit.length > 1 && (cmdSplit[1].equals(market.getName()) || cmdSplit[1].equals("all"))) {
+                        try {
+                            File dir = new File("sellLogs");
+                            dir.mkdir();
+                            File file = new File(dir, market.getName() + "_sellLog.txt");
+                            BufferedReader br = new BufferedReader(new FileReader(file));
+                            String st;
+                            double[] coinPerformance = new double[Market.mpRanges.length];
+                            int[] coinPerformanceTrades = new int[Market.mpRanges.length];
+                            while ((st = br.readLine()) != null) {
+                                double value = Double.parseDouble(st.substring(st.lastIndexOf("(") + 1, st.lastIndexOf("%")));
+                                double mpValue = Double.parseDouble(st.substring(st.lastIndexOf("[") + 1, st.lastIndexOf("]")));
+
+                                for (int i = 0; i < Market.mpRanges.length; i++) {
+                                    if (mpValue < Market.mpRanges[i]) {
+                                        continue;
+                                    }
+                                    coinPerformance[i] += value;
+                                    coinPerformanceTrades[i] += 1;
+                                    break;
+                                }
+                            }
+                            if (cmdSplit[1].equals("all")) {
+                                for (int i = 0; i < Market.mpRanges.length; i++) {
+                                    if (coinPerformance[i] > MPcurrentBestValue[i]) {
+                                        MPcurrentBestValue[i] = coinPerformance[i];
+                                        MPcurrentBestTradeCount[i] = coinPerformanceTrades[i];
+                                        MPcurrentBestName[i] = market.getName();
+                                    }
+                                }
+                            }
+                            else{
+                                String stt = market.getName() + " market performance:\n";
+                                String plus = "+";
+                                for(int i = 0; i < Market.mpRanges.length; i++){
+                                    if(Market.mpRanges[i]<=0){
+                                        plus = "";
+                                    }
+                                    stt += plus + Market.mpRanges[i] + "%: [" + market.getName() + "] (" + coinPerformanceTrades[i] + " trades) " + df.format(coinPerformance[i]) + "%\n";
+                                }
+                                this.channel.sendMessage(stt).queue();
+                            }
+                        } catch (IOException e) {}
+                    }
                 }
             }
-            if (messageText.contains("!reset")) {
-                String[] cmdSplit = messageText.split(" ", 3);
-                if (cmdSplit.length > 1 && (cmdSplit[1].equals(market.getName()) || cmdSplit[1].equals("all"))) {
-                    market.resetBot();
-                    this.channel.sendMessage("```[" + market.getName() + "] Reset Successfully.```").queue();
-                    if (!cmdSplit[1].equals("all")) {
-                        break;
+            if(messageText.equals("!mp all")){
+                String st = "Overall market performance:\n";
+                String plus = "+";
+                for(int i = 0; i< Market.mpRanges.length; i++){
+                    if(Market.mpRanges[i]<=0){
+                        plus = "";
                     }
+                    st += plus + Market.mpRanges[i] + "%: [" + MPcurrentBestName[i] + "] (" + MPcurrentBestTradeCount[i] + " trades) " + df.format(MPcurrentBestValue[i]) + "%\n";
                 }
+                this.channel.sendMessage(st).queue();
+                Arrays.fill(MPcurrentBestName,null);
+                Arrays.fill(MPcurrentBestValue,0);
+                Arrays.fill(MPcurrentBestTradeCount,0);
             }
         }
+        else {this.channel.sendMessage("Market bots are busy, try again.").queue();}
     }
 
     public void sendUpdateMsg(String msg) {

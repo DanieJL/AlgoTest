@@ -19,6 +19,8 @@ public class Market {
     private final static Logger LOGGER = Logger.getLogger(Market.class);
     private static final DecimalFormat df = new DecimalFormat("#.###");
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy hh:mm a");
+    public static final double[] mpRanges = {8,5,3,2,1,.5,0,-.5,-1,-2,-3,-5,-8};  //the market performance ranges to find the best algos for
+
 
     private final ApiClient apiClient;
 
@@ -36,6 +38,7 @@ public class Market {
     private String algoName = "default";
     private double numCoinsHeld = 0;
     private double accountVal = 1000;
+    private double marketPerformance = 0;  //the overall market performance at time of last purchase
 
     Market(String name) {
         this.name = name;
@@ -100,6 +103,7 @@ public class Market {
                         persist.put("currentPerChange", coinPercentChange);
                         persist.put("numCoinsHeld", numCoinsHeld);
                         persist.put("accountVal", accountVal);
+                        persist.put("marketPerformance", marketPerformance);
 
                         marketValues.put("persist", persist);
                         index = marketJsonArr.indexOf(market);
@@ -141,6 +145,7 @@ public class Market {
                     coinPercentChange = Double.parseDouble(market.getOrDefault("currentPerChange", 0).toString());
                     numCoinsHeld = Double.parseDouble(market.getOrDefault("numCoinsHeld", 0).toString());
                     accountVal = Double.parseDouble(market.getOrDefault("accountVal", 1000).toString());
+                    marketPerformance = Double.parseDouble(market.getOrDefault("marketPerformance", 0).toString());
                 }
             }
         } catch (IOException | ParseException e) {
@@ -159,17 +164,16 @@ public class Market {
 
     private void buyNew(String newTicker) {
         if (!newTicker.equals("")) {
-            //BUY CODE GOES HERE
-            if (tradeConfirm(newTicker)) {
-                coinSymbol = newTicker;
-                accountVal -= (accountVal * ((Main.feePercent / 100) / 2));
-                updateCurrent();
-                String message = "[" + this.getName() + "] Bought " + coinSymbol + " at $" + coinValue + " [https://www.binance.us/en/trade/pro/" + coinSymbol + "]";
-                LOGGER.info(message);
-                Main.UPDATER.sendUpdateMsg(message);
-            }
+            coinSymbol = newTicker;
+            accountVal -= (accountVal * ((Main.feePercent / 100) / 2));
+            updateCurrent();
+            trailingStopValue = (coinValue - ((trailingPercentBase / 100.0) * coinValue));
+            marketPerformance = Main.getMarketPerformance();
+            saveCurrentValues();
+            String message = "[" + this.getName() + "] Bought " + coinSymbol + " at $" + coinValue + " [https://www.binance.us/en/trade/pro/" + coinSymbol + "]";
+            LOGGER.info(message);
+            Main.UPDATER.sendUpdateMsg(message);
         }
-        saveCurrentValues();
     }
 
     public void updateCurrent() {
@@ -184,7 +188,6 @@ public class Market {
                     if (coinValuePaid == 0) { //just bought this
                         coinValuePaid = coinValue;
                         numCoinsHeld = accountVal / coinValue;
-                        trailingStopValue = (coinValue - ((trailingPercentBase / 100.0) * coinValue));
                     }
                     accountVal = numCoinsHeld * coinValue;
                     coinPercentChange = ((100 / coinValuePaid) * coinValue) - 100;
@@ -211,37 +214,38 @@ public class Market {
     }
 
     public void sellCurrent() {
-        //SELL CODE GOES HERE
-        if (tradeConfirm("")) {
-            String message = "[" + this.getName() + "] Sold " + coinSymbol + " at $" + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%)";
-            LOGGER.info(message);
-            Main.UPDATER.sendUpdateMsg(message);
+        String message = "[" + this.getName() + "] Sold " + coinSymbol + " at $" + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%)";
+        LOGGER.info(message);
+        Main.UPDATER.sendUpdateMsg(message);
+        sellLogAdd();
+        lastSymbol = coinSymbol;
+        coinValue = 0;
+        coinSymbol = "";
+        trailingPercent = trailingPercentBase;
+        trailingStopValue = 0;
+        coinValuePeak = 0;
+        coinValuePaid = 0;
+        coinPercentChange = 0;
+        numCoinsHeld = 0;
+        marketPerformance = 0;
+        accountVal -= (accountVal * ((Main.feePercent / 100) / 2));
+        saveCurrentValues();
+    }
 
-            String d = LocalDateTime.now().format(formatter);
-            try {
-                File dir = new File("sellLogs");
-                dir.mkdir();
-                File file = new File(dir, this.name + "_sellLog.txt");
-                FileWriter fw = new FileWriter(file, true);
-                if (file.length() != 0) {
-                    fw.write("\n");
-                }
-                fw.write("(" + d + ") Sold " + coinSymbol + " (" + df.format(coinPercentChange) + "%)");
-                fw.close();
-            } catch (IOException e) {
-                LOGGER.error("Failed to write to sellLog. Error: " + e.getMessage());
+    private void sellLogAdd(){
+        String d = LocalDateTime.now().format(formatter);
+        try {
+            File dir = new File("sellLogs");
+            dir.mkdir();
+            File file = new File(dir, this.name + "_sellLog.txt");
+            FileWriter fw = new FileWriter(file, true);
+            if (file.length() != 0) {
+                fw.write("\n");
             }
-            lastSymbol = coinSymbol;
-            coinValue = 0;
-            coinSymbol = "";
-            trailingPercent = trailingPercentBase;
-            trailingStopValue = 0;
-            coinValuePeak = 0;
-            coinValuePaid = 0;
-            coinPercentChange = 0;
-            numCoinsHeld = 0;
-            accountVal -= (accountVal * ((Main.feePercent / 100) / 2));
-            saveCurrentValues();
+            fw.write("(" + d + ") Sold " + coinSymbol + " (" + df.format(coinPercentChange) + "%) Market Performance @ buy: [" + df.format(marketPerformance) + "]");
+            fw.close();
+        } catch (IOException e) {
+            LOGGER.error("Failed to write to sellLog. Error: " + e.getMessage());
         }
     }
 
@@ -257,22 +261,8 @@ public class Market {
         this.numCoinsHeld = 0;
         this.accountVal = 1000;
         saveCurrentValues();
-
         File file = new File("sellLogs", this.name + "_sellLog.txt");
         file.delete();
-    }
-
-    private boolean tradeConfirm(String symbol) {
-     /*  boolean confirmed = false;
-       if(s.equals("")){
-            confirm it sold
-            confirmed = true;
-        }
-        else{
-            confirm it bought 's'
-            confirmed = true;
-        } */
-        return true; //confirmed
     }
 
 /*    public static void updateBinanceTickers() {
@@ -286,7 +276,7 @@ public class Market {
             for (int i = 0; i < data.length() - 1; i++) {
                 String testTicker = data.getJSONObject(i).getString("s");
                 if (testTicker.endsWith("USD")) {
-                    String filename = "c:\\Users\\Shaftspin\\Desktop\\IntelliJ\\IntelliJ IDEA Community Edition 2020.3.3\\AlgoTest\\allowed.txt";
+                    String filename = "\\allowed.txt";
                     FileWriter fw = new FileWriter(filename, true);
                     fw.write("\n" + testTicker);
                     fw.close();

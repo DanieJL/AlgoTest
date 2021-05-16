@@ -146,14 +146,14 @@ public class MarketUtil {
     }
 
     /*Calculates the total volume over the last [range] klines*/
-    public double getTotalVolume(List<Candlestick> candlesticks, int range){
+    public static double getUSDVolumeAvg(List<Candlestick> candlesticks, int range){
         double Vol = 0;
         for (int i = 0; i < candlesticks.size()-1; i++) {
             if (i >= candlesticks.size()-1-range) {
                 Vol += candlesticks.get(i).getVolume();
             }
         }
-        return Vol;
+        return Vol/range;
     }
 
     public List<Candlestick> getKlineData(String symbol, String interval) {
@@ -183,7 +183,7 @@ public class MarketUtil {
                 candlesticks.add(new Candlestick(stick.getLong(0),
                         Double.parseDouble(stick.getString(1)),
                         Double.parseDouble(stick.getString(4)),
-                        Double.parseDouble(stick.getString(5))));
+                        Double.parseDouble(stick.getString(7))));
             }
             allCandlesticks.addAll(candlesticks);
             break;

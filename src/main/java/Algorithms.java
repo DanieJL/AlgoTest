@@ -16,7 +16,7 @@ public class Algorithms {
 
     public String rsiLT30() {
         for (String ticker : MarketUtil.allowedTickers) {
-            List<Candlestick> klineData = this.klineData.getKline4hData().get(ticker);
+            List<Candlestick> klineData = this.klineData.getKline1mData().get(ticker);
             if (klineData.isEmpty())
                 continue;
             double[] rsiData = marketUtil.calculateRSIValues(klineData, 14);
@@ -29,7 +29,7 @@ public class Algorithms {
 
     public String fib618() {
         for (String ticker : MarketUtil.allowedTickers) {
-            List<Candlestick> klineData = this.klineData.getKline4hData().get(ticker);
+            List<Candlestick> klineData = this.klineData.getKline1mData().get(ticker);
             if (klineData.isEmpty())
                 continue;
             List<Candlestick> cStickDataForFIB = klineData
@@ -50,7 +50,7 @@ public class Algorithms {
 
     public String rsiAndFib() {
         for (String ticker : MarketUtil.allowedTickers) {
-            List<Candlestick> klineData = this.klineData.getKline4hData().get(ticker);
+            List<Candlestick> klineData = this.klineData.getKline1mData().get(ticker);
             if (klineData.isEmpty())
                 continue;
             List<Candlestick> cStickDataForFIB = klineData
@@ -75,7 +75,7 @@ public class Algorithms {
 
     public String lowRSIanyFib(int maxRSI, double fibRange, double volumeMin) {
         for (String ticker : MarketUtil.allowedTickers) {
-            List<Candlestick> klineData = this.klineData.getKline5mData().get(ticker);
+            List<Candlestick> klineData = this.klineData.getKline1mData().get(ticker);
             if (klineData.isEmpty())
                 continue;
             List<Candlestick> cStickDataForFIB = klineData
@@ -84,7 +84,7 @@ public class Algorithms {
                     .collect(Collectors.toList());
 
             double[] rsiData = marketUtil.calculateRSIValues(klineData, 14);
-            double volume = marketUtil.getTotalVolume(klineData, 6);
+            double volume = marketUtil.getUSDVolumeAvg(klineData, 6);
 
             if ((rsiData[rsiData.length - 1] < maxRSI) && volume > volumeMin) {
                 double[] fibs = marketUtil.calculateKeyFibRetracements(cStickDataForFIB);
@@ -100,20 +100,20 @@ public class Algorithms {
         }
         return "";
     }
-    public String RSI_MACD_PER(int MACD_RSImax, int rsiRange, int maRangeSmall, int maRangeBig, int percentRange1, double percentMin1, int percentRange2, double percentMin2, double volumeMin) {
+    public String RSI_MACD_PER(int MACD_RSImax, int rsiRange, int maRangeSmall, int maRangeBig, int percentRange1, double percentMin1, int percentRange2, double percentMin2, int volumeRange, double volumeUSDMin) {
         double best = 999;
         String bestTicker = "";
         for (String ticker : MarketUtil.allowedTickers) {
-            List<Candlestick> klineData = this.klineData.getKline5mData().get(ticker);
+            List<Candlestick> klineData = this.klineData.getKline1mData().get(ticker);
             if (klineData.isEmpty())
                 continue;
 
             double macd = marketUtil.calculateMACD(klineData, maRangeSmall, maRangeBig);
             double percent1 = marketUtil.getPercentChange(klineData, percentRange1);
             double percent2 = marketUtil.getPercentChange(klineData, percentRange2);
-            double volume = marketUtil.getTotalVolume(klineData, 6);
+            double volume = marketUtil.getUSDVolumeAvg(klineData, volumeRange);
 
-            if(percent1 > percentMin1 && percent2 > percentMin2 && volume > volumeMin){
+            if(percent1 > percentMin1 && percent2 > percentMin2 && volume > volumeUSDMin){
                 double[] rsiData = marketUtil.calculateRSIValues(klineData, rsiRange);
                 double MACD_RSI = (rsiData[rsiData.length - 1] + macd);
                 if (MACD_RSI < MACD_RSImax && MACD_RSI < best) {

@@ -26,11 +26,16 @@ public class Main {
     public static final String botListFile = "src/main/resources/BotList.json";
     public static final boolean persistData = true;
 
+    private static boolean busy = false;         //a check to keep commands from interrupting runMarketBot procedures
+    public static boolean getBusyMarket() {return busy;}
+
     public static void main(String[] args) {
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
                 KlineDatapack klineData = getKlineData();
+                marketPerformance = calculateMarketPerformance(klineData, 120);
+                busy = true;
                 MARKETS.forEach(market -> market.runMarketBot(klineData));
                 if (updateCtr <= 1) {
                     updates(MARKETS);
@@ -38,7 +43,7 @@ public class Main {
                 } else {
                     updateCtr--;
                 }
-
+                busy = false;
             }
         }, 0, 1000L * CYCLE_TIME);
     }
@@ -60,7 +65,6 @@ public class Main {
     }
 
     public static int updateCtr = 1;
-
     private static void updates(List<Market> bots) {
         String d = LocalDateTime.now().format(formatter2);
         String msg = "```<" + d + "> STATUS:";
@@ -80,11 +84,31 @@ public class Main {
         MarketUtil marketUtil = new MarketUtil();
         KlineDatapack klineData = new KlineDatapack();
         if (MARKETS.stream().anyMatch(market -> market.getCoinSymbol().equalsIgnoreCase(""))) {
-            Map<String, List<Candlestick>> kline4h = marketUtil.getKlineForAllTickers(KlineInterval.FOUR_HOUR);
-            klineData.setKline4hData(kline4h);
+            Map<String, List<Candlestick>> kline1m = marketUtil.getKlineForAllTickers(KlineInterval.ONE_MINUTE);
+            klineData.setKline1mData(kline1m);
         }
-
         return klineData;
+    }
+
+    private static double marketPerformance = 0;
+    public static double getMarketPerformance() {return marketPerformance;}
+
+    private static double calculateMarketPerformance(KlineDatapack data, int rangeInMinutes){
+        double totalVol = 0;
+        double weightPts = 0;
+        for (String ticker : MarketUtil.allowedTickers) {
+            List<Candlestick> klineData = data.getKline1mData().get(ticker);
+            if (klineData.isEmpty())
+                continue;
+            double start = klineData.get(klineData.size()-1-rangeInMinutes).getClose();
+            double end = klineData.get(klineData.size()-1).getClose();
+            double percentChange = ((end-start)/start) * 100;
+            double volume = MarketUtil.getUSDVolumeAvg(klineData,rangeInMinutes);
+
+            totalVol += volume;
+            weightPts += percentChange * volume;
+        }
+        return weightPts/totalVol;
     }
 }
 
