@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class Algorithms {
-    private final static Logger LOGGER = Logger.getLogger(DiscordBot.class);
+    private final static Logger LOGGER = Logger.getLogger(Algorithms.class);
     private final MarketUtil marketUtil;
     private KlineDatapack klineData;
 
@@ -20,7 +20,7 @@ public class Algorithms {
             if (klineData.isEmpty())
                 continue;
             double[] rsiData = marketUtil.calculateRSIValues(klineData, 14);
-            if (rsiData[rsiData.length - 1] < 30) {
+            if (rsiData[rsiData.length - 1] < 10) {
                 return ticker;
             }
         }
@@ -34,14 +34,14 @@ public class Algorithms {
                 continue;
             List<Candlestick> cStickDataForFIB = klineData
                     .stream()
-                    .filter(stick -> stick.getOpenTime() >= GeneralUtil.getDateDeltaUnix(-20))
+                    .filter(stick -> stick.getOpenTime() >= klineData.get(klineData.size() - 1).getClose() - (60000 * 300))
                     .collect(Collectors.toList());
             double[] fibs = marketUtil.calculateKeyFibRetracements(cStickDataForFIB);
             double fib618 = fibs[2];
             double lastClose = cStickDataForFIB.get(cStickDataForFIB.size() - 1).getClose();
             double fibDiff = Math.abs(lastClose - fib618);
             double fibDiffPercent = fibDiff / lastClose;
-            if (fibDiffPercent <= .02) {
+            if (fibDiffPercent <= .005) {
                 return ticker;
             }
         }
@@ -55,17 +55,17 @@ public class Algorithms {
                 continue;
             List<Candlestick> cStickDataForFIB = klineData
                     .stream()
-                    .filter(stick -> stick.getOpenTime() >= GeneralUtil.getDateDeltaUnix(-20))
+                    .filter(stick -> stick.getOpenTime() >= klineData.get(klineData.size() - 1).getClose() - (60000 * 300))
                     .collect(Collectors.toList());
 
             double[] rsiData = marketUtil.calculateRSIValues(klineData, 14);
-            if (rsiData[rsiData.length - 1] < 30) {
+            if (rsiData[rsiData.length - 1] < 10) {
                 double[] fibs = marketUtil.calculateKeyFibRetracements(cStickDataForFIB);
                 double fib618 = fibs[2];
                 double lastClose = cStickDataForFIB.get(cStickDataForFIB.size() - 1).getClose();
                 double fibDiff = Math.abs(lastClose - fib618);
                 double fibDiffPercent = fibDiff / lastClose;
-                if (fibDiffPercent <= .02) {
+                if (fibDiffPercent <= .005) {
                     return ticker;
                 }
             }
@@ -80,7 +80,7 @@ public class Algorithms {
                 continue;
             List<Candlestick> cStickDataForFIB = klineData
                     .stream()
-                    .filter(stick -> stick.getOpenTime() >= GeneralUtil.getDateDeltaUnix(-20))
+                    .filter(stick -> stick.getOpenTime() >= klineData.get(klineData.size() - 1).getClose() - (60000 * 300)) // 300 minutes ago
                     .collect(Collectors.toList());
 
             double[] rsiData = marketUtil.calculateRSIValues(klineData, 14);
