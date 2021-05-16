@@ -1,12 +1,10 @@
 
 import enums.KlineInterval;
 import org.apache.log4j.Logger;
-import org.apache.log4j.lf5.LogLevel;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import util.GeneralUtil;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -25,7 +23,7 @@ public class Main {
     private static final DecimalFormat df = new DecimalFormat("#.###");
 
     public static DiscordBot UPDATER = new DiscordBot();
-    public static List<Market> MARKETS = createBotsList();
+    public static List<MarketBot> MARKETBots = createBotsList();
 
     public static final String botListFile = "src/main/resources/BotList.json";
     public static final boolean persistData = true;
@@ -39,8 +37,8 @@ public class Main {
 
     public static void main(String[] args) {
         if (backtest) {
-            for (Market market : MARKETS) {
-                market.resetBot();
+            for (MarketBot marketBot : MARKETBots) {
+                marketBot.resetBot();
             }
             UPDATER.sendUpdateMsg("Backtest in progress.. Please do not send commands until completion confirmed.");
             KlineDatapack klineData = getBacktestData(backtestDateDeltaInDays, backtestInterval);
@@ -56,12 +54,12 @@ public class Main {
                     break;
                 }
                 intervalKeeperPack.setKline1mData(klineData.getKline1mDataIncremented(i));
-                MARKETS.forEach(market -> market.runMarketBot(intervalKeeperPack));
+                MARKETBots.forEach(marketBot -> marketBot.runMarketBot(intervalKeeperPack));
             }
             UPDATER.sendUpdateMsg("Backtest Completed.");
         } else {
-            for (Market market : MARKETS) {
-                market.resetBot();
+            for (MarketBot marketBot : MARKETBots) {
+                marketBot.resetBot();
             }
             new Timer().schedule(new TimerTask() {
                 @Override
@@ -69,9 +67,9 @@ public class Main {
                     KlineDatapack klineData = getKlineData(0);
                     marketPerformance = calculateMarketPerformance(klineData, 120);
                     busy = true;
-                    MARKETS.forEach(market -> market.runMarketBot(klineData));
+                    MARKETBots.forEach(marketBot -> marketBot.runMarketBot(klineData));
                     if (updateCtr <= 1) {
-                        updates(MARKETS);
+                        updates(MARKETBots);
                         updateCtr = ((UPDATE_CYCLE_TIME * 60) / CYCLE_TIME);
                     } else {
                         updateCtr--;
@@ -82,27 +80,27 @@ public class Main {
         }
     }
 
-    public static List<Market> createBotsList() {
+    public static List<MarketBot> createBotsList() {
         JSONParser parser = new JSONParser();
-        List<Market> marketBots = new ArrayList<>();
+        List<MarketBot> marketBotBots = new ArrayList<>();
         try (FileReader reader = new FileReader(botListFile)) {
             JSONArray marketJsonArr = (JSONArray) parser.parse(reader);
             marketJsonArr.forEach(m -> {
                 JSONObject market = (JSONObject) m;
-                marketBots.add(new Market(market.get("name").toString()));
+                marketBotBots.add(new MarketBot(market.get("name").toString()));
                 UPDATER.sendUpdateMsg(market.get("name").toString() + " Started.");
             });
         } catch (IOException | ParseException e) {
             e.printStackTrace();
         }
-        return marketBots;
+        return marketBotBots;
     }
 
     public static int updateCtr = 1;
-    private static void updates(List<Market> bots) {
+    private static void updates(List<MarketBot> bots) {
         String d = LocalDateTime.now().format(formatter2);
-        String msg = "```<" + d + "> STATUS:";
-        for (Market s : bots) {
+        String msg = "[" + d + "] Status update: (MP: " + df.format(Main.marketPerformance)  + "%)\n```";
+        for (MarketBot s : bots) {
             msg += "\n";
             if (s.getCoinSymbol().equals("")) {
                 msg += "[" + s.getName() + "] " + "Searching...";
