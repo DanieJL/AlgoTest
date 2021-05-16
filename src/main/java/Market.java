@@ -290,7 +290,7 @@ public class Market {
             if (file.length() != 0) {
                 fw.write("\n");
             }
-            fw.write("(" + d + ") Sold " + coinSymbol + " (" + df.format(coinPercentChange) + "%)");
+            fw.write("(" + d + ") Sold " + coinSymbol + " (" + df.format(coinPercentChange) + "%) Market Performance @ buy: [" + df.format(marketPerformance) + "]");
             fw.close();
         } catch (IOException e) {
             LOGGER.error("Failed to write to sellLog. Error: " + e.getMessage());

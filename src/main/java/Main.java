@@ -33,7 +33,7 @@ public class Main {
     private static boolean busy = false;         //a check to keep commands from interrupting runMarketBot procedures
     public static boolean getBusyMarket() {return busy;}
 
-    public static final boolean backtest = true;
+    public static final boolean backtest = false;
     public static final int backtestDateDeltaInDays = 30;
     public static final KlineInterval backtestInterval = KlineInterval.ONE_MINUTE;
 
@@ -60,6 +60,9 @@ public class Main {
             }
             UPDATER.sendUpdateMsg("Backtest Completed.");
         } else {
+            for (Market market : MARKETS) {
+                market.resetBot();
+            }
             new Timer().schedule(new TimerTask() {
                 @Override
                 public void run() {

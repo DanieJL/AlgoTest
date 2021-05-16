@@ -205,7 +205,6 @@ public class MarketUtil {
         for (String ticker : allowedTickers) {
             LOGGER.info("Getting kline data for " + ticker);
             List<Candlestick> klines = getKlineData(ticker, interval.getInterval(), daysAgo);
-            LOGGER.info((Arrays.stream(allowedTickers).toList().indexOf(ticker)) + " / " + allowedTickers.length + " assets collected.");
             klineMap.put(ticker, klines);
         }
         return klineMap;
