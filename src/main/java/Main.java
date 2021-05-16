@@ -21,7 +21,7 @@ public class Main {
     private static final DecimalFormat df = new DecimalFormat("#.###");
 
     public static DiscordBot UPDATER = new DiscordBot();
-    public static List<Market> MARKETS = createBotsList();
+    public static List<Market> MARKETbots = createBotsList();
 
     public static final String botListFile = "src/main/resources/BotList.json";
     public static final boolean persistData = true;
@@ -36,9 +36,9 @@ public class Main {
                 KlineDatapack klineData = getKlineData();
                 marketPerformance = calculateMarketPerformance(klineData, 120);
                 busy = true;
-                MARKETS.forEach(market -> market.runMarketBot(klineData));
+                MARKETbots.forEach(market -> market.runMarketBot(klineData));
                 if (updateCtr <= 1) {
-                    updates(MARKETS);
+                    updates(MARKETbots);
                     updateCtr = ((UPDATE_CYCLE_TIME * 60) / CYCLE_TIME);
                 } else {
                     updateCtr--;
@@ -67,7 +67,7 @@ public class Main {
     public static int updateCtr = 1;
     private static void updates(List<Market> bots) {
         String d = LocalDateTime.now().format(formatter2);
-        String msg = "```<" + d + "> STATUS:";
+        String msg = "[" + d + "] Status update: (MP: " + df.format(Main.marketPerformance)  + "%)\n```";
         for (Market s : bots) {
             msg += "\n";
             if (s.getCoinSymbol().equals("")) {
@@ -83,7 +83,7 @@ public class Main {
     public static KlineDatapack getKlineData() {
         MarketUtil marketUtil = new MarketUtil();
         KlineDatapack klineData = new KlineDatapack();
-        if (MARKETS.stream().anyMatch(market -> market.getCoinSymbol().equalsIgnoreCase(""))) {
+        if (MARKETbots.stream().anyMatch(market -> market.getCoinSymbol().equalsIgnoreCase(""))) {
             Map<String, List<Candlestick>> kline1m = marketUtil.getKlineForAllTickers(KlineInterval.ONE_MINUTE);
             klineData.setKline1mData(kline1m);
         }
