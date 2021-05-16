@@ -1,9 +1,12 @@
 
 import enums.KlineInterval;
+import org.apache.log4j.Logger;
+import org.apache.log4j.lf5.LogLevel;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import util.GeneralUtil;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -13,9 +16,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class Main {
+    private final static Logger LOGGER = Logger.getLogger(Main.class);
     public static final int CYCLE_TIME = 15;       //run the market test every X seconds
     public static final int UPDATE_CYCLE_TIME = 1; //how many minutes between each discord update (ends up taking longer because kline stuff)
-    public final static double feePercent = 1;     //estimated total fee as a % - per transactions (both buy/sell and spread)
+    public final static double feePercent = .15;     //estimated total fee as a % - per transactions (both buy/sell and spread)
 
     private static final DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("hh:mm a");
     private static final DecimalFormat df = new DecimalFormat("#.###");
@@ -26,21 +30,48 @@ public class Main {
     public static final String botListFile = "src/main/resources/BotList.json";
     public static final boolean persistData = true;
 
-    public static void main(String[] args) {
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                KlineDatapack klineData = getKlineData();
-                MARKETS.forEach(market -> market.runMarketBot(klineData));
-                if (updateCtr <= 1) {
-                    updates(MARKETS);
-                    updateCtr = ((UPDATE_CYCLE_TIME * 60) / CYCLE_TIME);
-                } else {
-                    updateCtr--;
-                }
+    public static final boolean backtest = true;
+    public static final int backtestDateDeltaInDays = 30;
+    public static final KlineInterval backtestInterval = KlineInterval.ONE_MINUTE;
 
+    public static void main(String[] args) {
+        for (Market market : MARKETS) {
+            market.resetBot();
+        }
+        if (backtest) {
+            UPDATER.sendUpdateMsg("Backtest in progress.. Please do not send commands until completion confirmed.");
+            KlineDatapack klineData = getBacktestData(backtestDateDeltaInDays, backtestInterval);
+            KlineDatapack intervalKeeperPack = new KlineDatapack();
+            int iterations = klineData.getKline1mData().get(MarketUtil.allowedTickers[0]).size();
+            for (int i = 0; i < iterations; i++) {
+                if (i % 1000 == 0) {
+                    LOGGER.info("On iteration " + i + " / " + iterations);
+                }
+                Map<String, List<Candlestick>> incrementedData = klineData.getKline1mDataIncremented(i);
+                if (incrementedData.isEmpty()) {
+                    LOGGER.info("End of backtest.");
+                    break;
+                }
+                intervalKeeperPack.setKline1mData(klineData.getKline1mDataIncremented(i));
+                MARKETS.forEach(market -> market.runMarketBot(intervalKeeperPack));
             }
-        }, 0, 1000L * CYCLE_TIME);
+            UPDATER.sendUpdateMsg("Backtest Completed.");
+        } else {
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    KlineDatapack klineData = getKlineData(0);
+                    MARKETS.forEach(market -> market.runMarketBot(klineData));
+                    if (updateCtr <= 1) {
+                        updates(MARKETS);
+                        updateCtr = ((UPDATE_CYCLE_TIME * 60) / CYCLE_TIME);
+                    } else {
+                        updateCtr--;
+                    }
+
+                }
+            }, 0, 1000L * CYCLE_TIME);
+        }
     }
 
     public static List<Market> createBotsList() {
@@ -76,13 +107,22 @@ public class Main {
         Main.UPDATER.sendUpdateMsg(msg);
     }
 
-    public static KlineDatapack getKlineData() {
+    public static KlineDatapack getKlineData(int daysAgo) {
         MarketUtil marketUtil = new MarketUtil();
         KlineDatapack klineData = new KlineDatapack();
         if (MARKETS.stream().anyMatch(market -> market.getCoinSymbol().equalsIgnoreCase(""))) {
-            Map<String, List<Candlestick>> kline4h = marketUtil.getKlineForAllTickers(KlineInterval.FOUR_HOUR);
+            Map<String, List<Candlestick>> kline4h = marketUtil.getKlineForAllTickers(KlineInterval.FOUR_HOUR, daysAgo);
             klineData.setKline4hData(kline4h);
         }
+
+        return klineData;
+    }
+
+    public static KlineDatapack getBacktestData(int backtestDateDeltaInDays, KlineInterval backtestInterval) {
+        MarketUtil marketUtil = new MarketUtil();
+        KlineDatapack klineData = new KlineDatapack();
+        Map<String, List<Candlestick>> data = marketUtil.getKlineForAllTickers(backtestInterval, backtestDateDeltaInDays);
+        klineData.setKlineData(data, backtestInterval);
 
         return klineData;
     }

@@ -17,7 +17,6 @@ import java.util.List;
 
 public class DiscordBot extends ListenerAdapter {
     private TextChannel channel = null;
-
     private final static Logger LOGGER = Logger.getLogger(DiscordBot.class);
     private static final DecimalFormat df = new DecimalFormat("#.###");
 
@@ -37,7 +36,7 @@ public class DiscordBot extends ListenerAdapter {
     /*WILL NEED TO MAKE SURE COMMANDS CANNOT INTERRUPT THINGS THAT DESYNC BOT (Like starting a sell while it's already trying to confirm a sell)*/
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (event.getAuthor().isBot()) {
+        if (event.getAuthor().isBot() || !event.getChannel().getId().equals(channel.getId())) {
             return;
         }
 

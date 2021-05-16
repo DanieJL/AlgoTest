@@ -11,9 +11,14 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
+import java.util.spi.AbstractResourceBundleProvider;
 
 public class Market {
     private final static Logger LOGGER = Logger.getLogger(Market.class);
@@ -36,6 +41,8 @@ public class Market {
     private String algoName = "default";
     private double numCoinsHeld = 0;
     private double accountVal = 1000;
+
+    private KlineDatapack klineDatapack;
 
     Market(String name) {
         this.name = name;
@@ -64,6 +71,7 @@ public class Market {
     }
 
     public void runMarketBot(KlineDatapack klineData) {
+        klineDatapack = klineData;
         if (coinSymbol.length() != 0) {
             updateCurrent();
             if (coinValue < trailingStopValue) {
@@ -166,31 +174,29 @@ public class Market {
                 updateCurrent();
                 String message = "[" + this.getName() + "] Bought " + coinSymbol + " at $" + coinValue + " [https://www.binance.us/en/trade/pro/" + coinSymbol + "]";
                 LOGGER.info(message);
-                Main.UPDATER.sendUpdateMsg(message);
+                if (!Main.backtest)
+                    Main.UPDATER.sendUpdateMsg(message);
             }
         }
         saveCurrentValues();
     }
 
     public void updateCurrent() {
-        String url = "https://www.binance.us/api/v3/ticker/price?symbol=" + coinSymbol;
-        try {
-            String JSON_DATA = apiClient.makeAPICall(url);
-            JSONObject data = new JSONObject(JSON_DATA);
-            for (Iterator it = data.keys(); it.hasNext(); ) {
-                String key = (String) it.next();
-                if (key.equals("price")) {
-                    coinValue = data.getDouble(key);
-                    if (coinValuePaid == 0) { //just bought this
-                        coinValuePaid = coinValue;
-                        numCoinsHeld = accountVal / coinValue;
-                        trailingStopValue = (coinValue - ((trailingPercentBase / 100.0) * coinValue));
-                    }
-                    accountVal = numCoinsHeld * coinValue;
-                    coinPercentChange = ((100 / coinValuePaid) * coinValue) - 100;
-                    break;
-                }
+        if (Main.backtest) {
+            List<Candlestick> tickerKline = klineDatapack.getKline1mData().get(coinSymbol);
+            if (tickerKline == null) {
+                LOGGER.info("No Data for " + coinSymbol);
+                return;
             }
+            coinValue = tickerKline.get(tickerKline.size() - 1).getClose();
+            if (coinValuePaid == 0) { //just bought this
+                coinValuePaid = coinValue;
+                numCoinsHeld = accountVal / coinValue;
+                trailingStopValue = (coinValue - ((trailingPercentBase / 100.0) * coinValue));
+            }
+            accountVal = numCoinsHeld * coinValue;
+            coinPercentChange = ((100 / coinValuePaid) * coinValue) - 100;
+
             if (coinValue > coinValuePeak) {
                 coinValuePeak = coinValue;
                 trailingPercent = trailingPercentBase;
@@ -205,8 +211,42 @@ public class Market {
                 }
                 trailingStopValue = (coinValuePeak - ((trailingPercent / 100.0) * coinValuePeak));
             }
-        } catch (IOException | JSONException e) {
-            LOGGER.error("Error: cannot access content - " + e.toString());
+        } else {
+            String url = "https://www.binance.us/api/v3/ticker/price?symbol=" + coinSymbol;
+            try {
+                String JSON_DATA = apiClient.makeAPICall(url);
+                JSONObject data = new JSONObject(JSON_DATA);
+                for (Iterator it = data.keys(); it.hasNext(); ) {
+                    String key = (String) it.next();
+                    if (key.equals("price")) {
+                        coinValue = data.getDouble(key);
+                        if (coinValuePaid == 0) { //just bought this
+                            coinValuePaid = coinValue;
+                            numCoinsHeld = accountVal / coinValue;
+                            trailingStopValue = (coinValue - ((trailingPercentBase / 100.0) * coinValue));
+                        }
+                        accountVal = numCoinsHeld * coinValue;
+                        coinPercentChange = ((100 / coinValuePaid) * coinValue) - 100;
+                        break;
+                    }
+                }
+                if (coinValue > coinValuePeak) {
+                    coinValuePeak = coinValue;
+                    trailingPercent = trailingPercentBase;
+                    if (coinPercentChange > .6) {                                             //at .6% gain, set trail down to .5%
+                        trailingPercent = .5;
+                    }
+                    if (coinPercentChange > 1) {                                             //trail stays at .5% until 1% gain
+                        trailingPercent += (coinPercentChange - 1) * .1;                 //trail grows .1% for each addition 1% gain
+                        if (trailingPercent > 3) {
+                            trailingPercent = 3;
+                        }
+                    }
+                    trailingStopValue = (coinValuePeak - ((trailingPercent / 100.0) * coinValuePeak));
+                }
+            } catch (IOException | JSONException e) {
+                LOGGER.error("Error: cannot access content - " + e.toString());
+            }
         }
     }
 
@@ -215,9 +255,15 @@ public class Market {
         if (tradeConfirm("")) {
             String message = "[" + this.getName() + "] Sold " + coinSymbol + " at $" + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%)";
             LOGGER.info(message);
-            Main.UPDATER.sendUpdateMsg(message);
-
             String d = LocalDateTime.now().format(formatter);
+            if (!Main.backtest)
+                Main.UPDATER.sendUpdateMsg(message);
+            else {
+                List<Candlestick> tickerKline = klineDatapack.getKline1mData().get(coinSymbol);
+                Long closeTime = tickerKline.get(tickerKline.size() - 1).getCloseTime();
+                SimpleDateFormat dt = new SimpleDateFormat("MM/dd/yyyy hh:mm a");
+                d = dt.format(new Date(closeTime));
+            }
             try {
                 File dir = new File("sellLogs");
                 dir.mkdir();
