@@ -16,7 +16,6 @@ import java.util.Comparator;
 
 public class DiscordBot extends ListenerAdapter {
     private TextChannel channel = null;
-
     private final static Logger LOGGER = Logger.getLogger(DiscordBot.class);
     private static final DecimalFormat df = new DecimalFormat("#.###");
 
@@ -37,7 +36,7 @@ public class DiscordBot extends ListenerAdapter {
     /*WILL NEED TO MAKE SURE COMMANDS CANNOT INTERRUPT THINGS THAT DESYNC BOT (Like starting a sell while it's already trying to confirm a sell)*/
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (event.getAuthor().isBot()) {
+        if (event.getAuthor().isBot() || !event.getChannel().getId().equals(channel.getId())) {
             return;
         }
 
@@ -46,19 +45,19 @@ public class DiscordBot extends ListenerAdapter {
             return;
 
         if (messageText.equals("!quit") || messageText.equals("!shutdown")) {
-            for (MarketBot marketBot : Main.MARKETbots) {
+            for (MarketBot marketBot : Main.MARKETBots) {
                 this.channel.sendMessage("Saving settings and shutting down [" + marketBot.getName() + "]").queue();
                 marketBot.saveCurrentValues();
             }
             GeneralUtil.waitSeconds(5);
             System.exit(0);
         }
-        if(!Main.getBusyMarket()) { //make sure these commands cannot interfere with bot, simultaneous stuff causes crash
-            Main.MARKETbots.sort(Comparator.comparing(MarketBot::getAccountVal).reversed());
+        if (!Main.getBusyMarket()) { //make sure these commands cannot interfere with bot, simultaneous stuff causes crash
+            Main.MARKETBots.sort(Comparator.comparing(MarketBot::getAccountVal).reversed());
             String[] MPcurrentBestName = new String[MarketBot.mpRanges.length];                    //the current best performers in each range
             double[] MPcurrentBestValue = new double[MarketBot.mpRanges.length];
             int[] MPcurrentBestTradeCount = new int[MarketBot.mpRanges.length];
-            for (MarketBot marketBot : Main.MARKETbots) {
+            for (MarketBot marketBot : Main.MARKETBots) {
                 if (messageText.contains("!sell")) {
                     String[] cmdSplit = messageText.split(" ", 3);
                     if (cmdSplit.length > 1 && (cmdSplit[1].equals(marketBot.getName()) || cmdSplit[1].equals("all"))) {
@@ -128,7 +127,7 @@ public class DiscordBot extends ListenerAdapter {
                     }
                 }
 
-                if(messageText.contains("!mp")) {
+                if (messageText.contains("!mp")) {
                     String[] cmdSplit = messageText.split(" ", 3);
                     if (cmdSplit.length > 1 && (cmdSplit[1].equals(marketBot.getName()) || cmdSplit[1].equals("all"))) {
                         try {
@@ -153,7 +152,7 @@ public class DiscordBot extends ListenerAdapter {
                                 }
                             }
                             for (int i = 0; i < MarketBot.mpRanges.length; i++) { //this loop makes it go by avg instead of overall
-                                coinPerformance[i] = coinPerformance[i]/coinPerformanceTrades[i];
+                                coinPerformance[i] = coinPerformance[i] / coinPerformanceTrades[i];
                             }
                             if (cmdSplit[1].equals("all")) {
                                 for (int i = 0; i < MarketBot.mpRanges.length; i++) {
@@ -163,14 +162,13 @@ public class DiscordBot extends ListenerAdapter {
                                         MPcurrentBestName[i] = marketBot.getName();
                                     }
                                 }
-                            }
-                            else{
+                            } else {
                                 String msg = marketBot.getName() + " market performance:\n```";
                                 String plus = "+";
-                                for(int i = 0; i < MarketBot.mpRanges.length; i++){
-                                    if(MarketBot.mpRanges[i]<=0){
+                                for (int i = 0; i < MarketBot.mpRanges.length; i++) {
+                                    if (MarketBot.mpRanges[i] <= 0) {
                                         plus = "";
-                                        if(MarketBot.mpRanges[i]==0) {
+                                        if (MarketBot.mpRanges[i] == 0) {
                                             plus = " ";
                                         }
                                     }
@@ -179,27 +177,33 @@ public class DiscordBot extends ListenerAdapter {
                                 msg += "```";
                                 this.channel.sendMessage(msg).queue();
                             }
-                        } catch (IOException e) {}
+                        } catch (IOException e) {
+                            LOGGER.error("Error reading sell log.");
+                        }
                     }
                 }
             }
-            if(messageText.equals("!mp all")){
+            if (messageText.equals("!mp all")) {
                 String msg = "Overall market performance: (" + df.format(Main.getMarketPerformance()) + "%)\n```";
                 String plus = "+";
-                for(int i = 0; i< MarketBot.mpRanges.length; i++){
-                    if(MarketBot.mpRanges[i]<=0){
+                for (int i = 0; i < MarketBot.mpRanges.length; i++) {
+                    if (MarketBot.mpRanges[i] <= 0) {
                         plus = "";
                         if(MarketBot.mpRanges[i]==0) {
                             plus = " ";
                         }
+                    }
+                    if (MarketBot.mpRanges[i] == 0) {
+                        plus = " ";
                     }
                     msg += plus + MarketBot.mpRanges[i] + "%: [" + MPcurrentBestName[i] + "] (" + MPcurrentBestTradeCount[i] + " trades) " + df.format(MPcurrentBestValue[i]) + "%avg\n";
                 }
                 msg += "```";
                 this.channel.sendMessage(msg).queue();
             }
+        } else {
+            this.channel.sendMessage("Market bots are busy, try again.").queue();
         }
-        else {this.channel.sendMessage("Market bots are busy, try again.").queue();}
     }
 
     public void sendUpdateMsg(String msg) {

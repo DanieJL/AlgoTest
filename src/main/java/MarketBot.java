@@ -11,15 +11,19 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 
 public class MarketBot {
     private final static Logger LOGGER = Logger.getLogger(MarketBot.class);
     private static final DecimalFormat df = new DecimalFormat("#.###");
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy hh:mm a");
-    public static final double[] mpRanges = {8,5,3,2,1,.5,0,-.5,-1,-2,-3,-5,-8};  //the market performance ranges to find the best algos for
+    public static final double[] mpRanges = {8, 5, 3, 2, 1, .5, 0, -.5, -1, -2, -3, -5, -8};  //the market performance ranges to find the best algos for
+
 
     private final ApiClient apiClient;
 
@@ -38,6 +42,8 @@ public class MarketBot {
     private double numCoinsHeld = 0;
     private double accountVal = 1000;
     private double marketPerformance = 0;  //the overall market performance at time of last purchase
+
+    private KlineDatapack klineDatapack;
 
     MarketBot(String name) {
         this.name = name;
@@ -66,6 +72,7 @@ public class MarketBot {
     }
 
     public void runMarketBot(KlineDatapack klineData) {
+        klineDatapack = klineData;
         if (coinSymbol.length() != 0) {
             updateCurrent();
             if (coinValue < trailingStopValue) {
@@ -154,33 +161,37 @@ public class MarketBot {
 
     public String findNew(KlineDatapack klineData) {
         Algorithms algos = new Algorithms(klineData);
+        if (klineData == null)
+            return "";
         return switch (algoName) {
-            case "MACD_RSI_130A" -> algos.RSI_MACD_PER(130,14,7,25, 20,99.5,40,101,6, 10000);
-            case "MACD_RSI_130B" -> algos.RSI_MACD_PER(130,14,14,60, 20,100,40,102,6, 10000);
-            case "MACD_RSI_130C" -> algos.RSI_MACD_PER(130,14,7,25, 20,0,40,0,6, 10000);
-            case "MACD_RSI_130D" -> algos.RSI_MACD_PER(130,14,14,60, 20,0,40,0, 6,10000);
-            case "MACD_RSI_127A" -> algos.RSI_MACD_PER(127,14,7,25, 20,99.5,40,101,6, 10000);
-            case "MACD_RSI_127B" -> algos.RSI_MACD_PER(127,14,14,60, 20,100,40,102,6, 10000);
-            case "MACD_RSI_127C" -> algos.RSI_MACD_PER(127,14,7,25, 20,0,40,0,6, 10000);
-            case "MACD_RSI_127D" -> algos.RSI_MACD_PER(127,14,14,60, 20,0,40,0,6, 10000);
-            case "MACD_RSI_125A" -> algos.RSI_MACD_PER(125,14,7,25, 20,99.5,40,101, 6,10000);
-            case "MACD_RSI_125B" -> algos.RSI_MACD_PER(125,14,14,60, 20,100,40,102,6, 10000);
-            case "MACD_RSI_125C" -> algos.RSI_MACD_PER(125,14,7,25, 20,0,40,0, 6,10000);
-            case "MACD_RSI_125D" -> algos.RSI_MACD_PER(125,14,14,60, 20,0,40,0,6, 10000);
-            case "MACD_RSI_122A" -> algos.RSI_MACD_PER(122,14,7,25, 20,99.5,40,101, 6,10000);
-            case "MACD_RSI_122B" -> algos.RSI_MACD_PER(122,14,14,60, 20,100,40,102,6, 10000);
-            case "MACD_RSI_122C" -> algos.RSI_MACD_PER(122,14,7,25, 20,0,40,0,6, 10000);
-            case "MACD_RSI_122D" -> algos.RSI_MACD_PER(122,14,14,60, 20,0,40,0,6,10000);
-            case "40RSI_Fib03" -> algos.lowRSIanyFib(40,.03, 10000);
-            case "30RSI_Fib01" -> algos.lowRSIanyFib(30,.01, 10000);
-            case "30RSI_Fib02" -> algos.lowRSIanyFib(30,.02, 10000);
-            case "30RSI_Fib03" -> algos.lowRSIanyFib(30,.03, 10000);
-            case "28RSI_Fib01" -> algos.lowRSIanyFib(28,.01, 10000);
-            case "28RSI_Fib02" -> algos.lowRSIanyFib(28,.02, 10000);
-            case "28RSI_Fib03" -> algos.lowRSIanyFib(28,.03, 10000);
-            case "25RSI_Fib01" -> algos.lowRSIanyFib(25,.01, 10000);
-            case "25RSI_Fib02" -> algos.lowRSIanyFib(25,.02, 10000);
-            case "25RSI_Fib03" -> algos.lowRSIanyFib(25,.03, 10000);
+            case "fib" -> algos.fib618();
+            case "rsiAndFib" -> algos.rsiAndFib();
+            case "MACD_RSI_130A" -> algos.RSI_MACD_PER(130, 14, 7, 25, 20, 99.5, 40, 101, 6, 10000);
+            case "MACD_RSI_130B" -> algos.RSI_MACD_PER(130, 14, 14, 60, 20, 100, 40, 102, 6, 10000);
+            case "MACD_RSI_130C" -> algos.RSI_MACD_PER(130, 14, 7, 25, 20, 0, 40, 0, 6, 10000);
+            case "MACD_RSI_130D" -> algos.RSI_MACD_PER(130, 14, 14, 60, 20, 0, 40, 0, 6, 10000);
+            case "MACD_RSI_127A" -> algos.RSI_MACD_PER(127, 14, 7, 25, 20, 99.5, 40, 101, 6, 10000);
+            case "MACD_RSI_127B" -> algos.RSI_MACD_PER(127, 14, 14, 60, 20, 100, 40, 102, 6, 10000);
+            case "MACD_RSI_127C" -> algos.RSI_MACD_PER(127, 14, 7, 25, 20, 0, 40, 0, 6, 10000);
+            case "MACD_RSI_127D" -> algos.RSI_MACD_PER(127, 14, 14, 60, 20, 0, 40, 0, 6, 10000);
+            case "MACD_RSI_125A" -> algos.RSI_MACD_PER(125, 14, 7, 25, 20, 99.5, 40, 101, 6, 10000);
+            case "MACD_RSI_125B" -> algos.RSI_MACD_PER(125, 14, 14, 60, 20, 100, 40, 102, 6, 10000);
+            case "MACD_RSI_125C" -> algos.RSI_MACD_PER(125, 14, 7, 25, 20, 0, 40, 0, 6, 10000);
+            case "MACD_RSI_125D" -> algos.RSI_MACD_PER(125, 14, 14, 60, 20, 0, 40, 0, 6, 10000);
+            case "MACD_RSI_122A" -> algos.RSI_MACD_PER(122, 14, 7, 25, 20, 99.5, 40, 101, 6, 10000);
+            case "MACD_RSI_122B" -> algos.RSI_MACD_PER(122, 14, 14, 60, 20, 100, 40, 102, 6, 10000);
+            case "MACD_RSI_122C" -> algos.RSI_MACD_PER(122, 14, 7, 25, 20, 0, 40, 0, 6, 10000);
+            case "MACD_RSI_122D" -> algos.RSI_MACD_PER(122, 14, 14, 60, 20, 0, 40, 0, 6, 10000);
+            case "40RSI_Fib03" -> algos.lowRSIanyFib(40, .03, 10000);
+            case "30RSI_Fib01" -> algos.lowRSIanyFib(30, .01, 10000);
+            case "30RSI_Fib02" -> algos.lowRSIanyFib(30, .02, 10000);
+            case "30RSI_Fib03" -> algos.lowRSIanyFib(30, .03, 10000);
+            case "28RSI_Fib01" -> algos.lowRSIanyFib(28, .01, 10000);
+            case "28RSI_Fib02" -> algos.lowRSIanyFib(28, .02, 10000);
+            case "28RSI_Fib03" -> algos.lowRSIanyFib(28, .03, 10000);
+            case "25RSI_Fib01" -> algos.lowRSIanyFib(25, .01, 10000);
+            case "25RSI_Fib02" -> algos.lowRSIanyFib(25, .02, 10000);
+            case "25RSI_Fib03" -> algos.lowRSIanyFib(25, .03, 10000);
             default -> algos.rsiLT30();
         };
     }
@@ -195,28 +206,27 @@ public class MarketBot {
             saveCurrentValues();
             String message = "[" + this.getName() + "] Bought " + coinSymbol + " at $" + coinValue + " [https://www.binance.us/en/trade/pro/" + coinSymbol + "]";
             LOGGER.info(message);
-            Main.UPDATER.sendUpdateMsg(message);
+            if (!Main.backtest)
+                Main.UPDATER.sendUpdateMsg(message);
         }
     }
 
     public void updateCurrent() {
-        String url = "https://www.binance.us/api/v3/ticker/price?symbol=" + coinSymbol;
-        try {
-            String JSON_DATA = apiClient.makeAPICall(url);
-            JSONObject data = new JSONObject(JSON_DATA);
-            for (Iterator it = data.keys(); it.hasNext(); ) {
-                String key = (String) it.next();
-                if (key.equals("price")) {
-                    coinValue = data.getDouble(key);
-                    if (coinValuePaid == 0) { //just bought this
-                        coinValuePaid = coinValue;
-                        numCoinsHeld = accountVal / coinValue;
-                    }
-                    accountVal = numCoinsHeld * coinValue;
-                    coinPercentChange = ((100 / coinValuePaid) * coinValue) - 100;
-                    break;
-                }
+        if (Main.backtest) {
+            List<Candlestick> tickerKline = klineDatapack.getKline1mData().get(coinSymbol);
+            if (tickerKline == null) {
+                LOGGER.info("No Data for " + coinSymbol);
+                return;
             }
+            coinValue = tickerKline.get(tickerKline.size() - 1).getClose();
+            if (coinValuePaid == 0) { //just bought this
+                coinValuePaid = coinValue;
+                numCoinsHeld = accountVal / coinValue;
+                trailingStopValue = (coinValue - ((trailingPercentBase / 100.0) * coinValue));
+            }
+            accountVal = numCoinsHeld * coinValue;
+            coinPercentChange = ((100 / coinValuePaid) * coinValue) - 100;
+
             if (coinValue > coinValuePeak) {
                 coinValuePeak = coinValue;
                 trailingPercent = trailingPercentBase;
@@ -231,15 +241,50 @@ public class MarketBot {
                 }
                 trailingStopValue = (coinValuePeak - ((trailingPercent / 100.0) * coinValuePeak));
             }
-        } catch (IOException | JSONException e) {
-            LOGGER.error("Error: cannot access content - " + e.toString());
+        } else {
+            String url = "https://www.binance.us/api/v3/ticker/price?symbol=" + coinSymbol;
+            try {
+                String JSON_DATA = apiClient.makeAPICall(url);
+                JSONObject data = new JSONObject(JSON_DATA);
+                for (Iterator it = data.keys(); it.hasNext(); ) {
+                    String key = (String) it.next();
+                    if (key.equals("price")) {
+                        coinValue = data.getDouble(key);
+                        if (coinValuePaid == 0) { //just bought this
+                            coinValuePaid = coinValue;
+                            numCoinsHeld = accountVal / coinValue;
+                            trailingStopValue = (coinValue - ((trailingPercentBase / 100.0) * coinValue));
+                        }
+                        accountVal = numCoinsHeld * coinValue;
+                        coinPercentChange = ((100 / coinValuePaid) * coinValue) - 100;
+                        break;
+                    }
+                }
+                if (coinValue > coinValuePeak) {
+                    coinValuePeak = coinValue;
+                    trailingPercent = trailingPercentBase;
+                    if (coinPercentChange > .6) {                                             //at .6% gain, set trail down to .5%
+                        trailingPercent = .5;
+                    }
+                    if (coinPercentChange > 1) {                                             //trail stays at .5% until 1% gain
+                        trailingPercent += (coinPercentChange - 1) * .1;                 //trail grows .1% for each addition 1% gain
+                        if (trailingPercent > 3) {
+                            trailingPercent = 3;
+                        }
+                    }
+                    trailingStopValue = (coinValuePeak - ((trailingPercent / 100.0) * coinValuePeak));
+                }
+            } catch (IOException | JSONException e) {
+                LOGGER.error("Error: cannot access content - " + e.toString());
+            }
         }
     }
 
     public void sellCurrent() {
         String message = "[" + this.getName() + "] Sold " + coinSymbol + " at $" + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%)";
         LOGGER.info(message);
-        Main.UPDATER.sendUpdateMsg(message);
+        if (!Main.backtest)
+            Main.UPDATER.sendUpdateMsg(message);
         sellLogAdd();
         lastSymbol = coinSymbol;
         coinValue = 0;
@@ -255,8 +300,14 @@ public class MarketBot {
         saveCurrentValues();
     }
 
-    private void sellLogAdd(){
+    private void sellLogAdd() {
         String d = LocalDateTime.now().format(formatter);
+        if (Main.backtest) {
+            List<Candlestick> tickerKline = klineDatapack.getKline1mData().get(coinSymbol);
+            Long closeTime = tickerKline.get(tickerKline.size() - 1).getCloseTime();
+            SimpleDateFormat dt = new SimpleDateFormat("MM/dd/yyyy hh:mm a");
+            d = dt.format(new Date(closeTime));
+        }
         try {
             File dir = new File("sellLogs");
             dir.mkdir();
@@ -278,12 +329,12 @@ public class MarketBot {
         this.coinValuePaid = 0;
         this.coinValuePeak = 0;
         this.coinPercentChange = 0;
-        this.marketPerformance = 0;
         this.lastSymbol = "temporary";
         this.trailingStopValue = 0;
         this.trailingPercent = trailingPercentBase;
         this.numCoinsHeld = 0;
         this.accountVal = 1000;
+        this.marketPerformance = 0;
         saveCurrentValues();
         File file = new File("sellLogs", this.name + "_sellLog.txt");
         file.delete();

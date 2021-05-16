@@ -19,6 +19,7 @@ public enum KlineInterval {
 
 
     private String interval;
+
     KlineInterval(String interval) {
         this.interval = interval;
     }

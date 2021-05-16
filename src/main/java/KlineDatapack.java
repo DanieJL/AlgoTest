@@ -1,3 +1,6 @@
+import enums.KlineInterval;
+
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,6 +24,7 @@ public class KlineDatapack {
     private Map<String, List<Candlestick>> kline12hData;
     private Map<String, List<Candlestick>> kline1dData;
     private Map<String, List<Candlestick>> kline3dData;
+    private Map<String, List<Candlestick>> kline1wData;
     private Map<String, List<Candlestick>> kline1MData;
 
     public Map<String, List<Candlestick>> getKline1mData() {
@@ -29,6 +33,18 @@ public class KlineDatapack {
 
     public void setKline1mData(Map<String, List<Candlestick>> kline1mData) {
         this.kline1mData = kline1mData;
+    }
+
+    public Map<String, List<Candlestick>> getKline1mDataIncremented(int minutes) {
+        Map<String, List<Candlestick>> newMap = new HashMap<>();
+        for (String ticker : MarketUtil.allowedTickers) {
+            List<Candlestick> newK;
+            if (minutes + 999 <= kline1mData.get(ticker).size()) {
+                newK = kline1mData.get(ticker).subList(minutes, minutes + 999);
+                newMap.put(ticker, newK);
+            }
+        }
+        return newMap;
     }
 
     public Map<String, List<Candlestick>> getKline3mData() {
@@ -127,12 +143,53 @@ public class KlineDatapack {
         this.kline3dData = kline3dData;
     }
 
+    public Map<String, List<Candlestick>> getKline1wData() {
+        return kline1wData;
+    }
+
+    public void setKline1wData(Map<String, List<Candlestick>> kline1wData) {
+        this.kline1wData = kline1wData;
+    }
+
     public Map<String, List<Candlestick>> getKline1MData() {
         return kline1MData;
     }
 
     public void setKline1MData(Map<String, List<Candlestick>> kline1MData) {
         this.kline1MData = kline1MData;
+    }
+
+    public void setKlineData(Map<String, List<Candlestick>> data, KlineInterval interval) {
+        switch (interval) {
+            case ONE_MINUTE:
+                setKline1mData(data);
+            case THREE_MINUTE:
+                setKline3mData(data);
+            case FIVE_MINUTE:
+                setKline15mData(data);
+            case THIRTY_MINUTE:
+                setKline30mData(data);
+            case ONE_HOUR:
+                setKline1hData(data);
+            case TWO_HOUR:
+                setKline2hData(data);
+            case FOUR_HOUR:
+                setKline4hData(data);
+            case SIX_HOUR:
+                setKline6hData(data);
+            case EIGHT_HOUR:
+                setKline8hData(data);
+            case TWELVE_HOUR:
+                setKline12hData(data);
+            case ONE_DAY:
+                setKline1dData(data);
+            case THREE_DAY:
+                setKline3dData(data);
+            case ONE_WEEK:
+                setKline1wData(data);
+            case ONE_MONTH:
+                setKline1MData(data);
+        }
     }
 
 }

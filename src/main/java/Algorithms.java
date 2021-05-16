@@ -1,11 +1,10 @@
 import org.apache.log4j.Logger;
-import util.GeneralUtil;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class Algorithms {
-    private final static Logger LOGGER = Logger.getLogger(DiscordBot.class);
+    private final static Logger LOGGER = Logger.getLogger(Algorithms.class);
     private final MarketUtil marketUtil;
     private KlineDatapack klineData;
 
@@ -34,7 +33,7 @@ public class Algorithms {
                 continue;
             List<Candlestick> cStickDataForFIB = klineData
                     .stream()
-                    .filter(stick -> stick.getOpenTime() >= GeneralUtil.getDateDeltaUnix(-20))
+                    .filter(stick -> stick.getOpenTime() >= klineData.get(klineData.size() - 1).getClose() - (60000 * 300))
                     .collect(Collectors.toList());
             double[] fibs = marketUtil.calculateKeyFibRetracements(cStickDataForFIB);
             double fib618 = fibs[2];
@@ -55,7 +54,7 @@ public class Algorithms {
                 continue;
             List<Candlestick> cStickDataForFIB = klineData
                     .stream()
-                    .filter(stick -> stick.getOpenTime() >= GeneralUtil.getDateDeltaUnix(-20))
+                    .filter(stick -> stick.getOpenTime() >= klineData.get(klineData.size() - 1).getClose() - (60000 * 300))
                     .collect(Collectors.toList());
 
             double[] rsiData = marketUtil.calculateRSIValues(klineData, 14);
@@ -65,7 +64,7 @@ public class Algorithms {
                 double lastClose = cStickDataForFIB.get(cStickDataForFIB.size() - 1).getClose();
                 double fibDiff = Math.abs(lastClose - fib618);
                 double fibDiffPercent = fibDiff / lastClose;
-                if (fibDiffPercent <= .02) {
+                if (fibDiffPercent <= .005) {
                     return ticker;
                 }
             }
@@ -80,7 +79,7 @@ public class Algorithms {
                 continue;
             List<Candlestick> cStickDataForFIB = klineData
                     .stream()
-                    .filter(stick -> stick.getOpenTime() >= GeneralUtil.getDateDeltaUnix(-20))
+                    .filter(stick -> stick.getOpenTime() >= klineData.get(klineData.size() - 1).getClose() - (60000 * 300)) // 300 minutes ago
                     .collect(Collectors.toList());
 
             double[] rsiData = marketUtil.calculateRSIValues(klineData, 14);
@@ -89,7 +88,7 @@ public class Algorithms {
             if ((rsiData[rsiData.length - 1] < maxRSI) && volume > volumeMin) {
                 double[] fibs = marketUtil.calculateKeyFibRetracements(cStickDataForFIB);
                 double lastClose = cStickDataForFIB.get(cStickDataForFIB.size() - 1).getClose();
-                for(double d : fibs){
+                for (double d : fibs) {
                     double fibDiff = Math.abs(lastClose - d);
                     double fibDiffPercent = fibDiff / lastClose;
                     if (fibDiffPercent <= fibRange) {
@@ -100,6 +99,7 @@ public class Algorithms {
         }
         return "";
     }
+
     public String RSI_MACD_PER(int MACD_RSImax, int rsiRange, int maRangeSmall, int maRangeBig, int percentRange1, double percentMin1, int percentRange2, double percentMin2, int volumeRange, double volumeUSDMin) {
         double best = 999;
         String bestTicker = "";
@@ -113,7 +113,7 @@ public class Algorithms {
             double percent2 = marketUtil.getPercentChange(klineData, percentRange2);
             double volume = marketUtil.getUSDVolumeAvg(klineData, volumeRange);
 
-            if(percent1 > percentMin1 && percent2 > percentMin2 && volume > volumeUSDMin){
+            if (percent1 > percentMin1 && percent2 > percentMin2 && volume > volumeUSDMin) {
                 double[] rsiData = marketUtil.calculateRSIValues(klineData, rsiRange);
                 double MACD_RSI = (rsiData[rsiData.length - 1] + macd);
                 if (MACD_RSI < MACD_RSImax && MACD_RSI < best) {
