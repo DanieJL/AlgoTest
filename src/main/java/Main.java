@@ -21,7 +21,7 @@ public class Main {
     private static final DecimalFormat df = new DecimalFormat("#.###");
 
     public static DiscordBot UPDATER = new DiscordBot();
-    public static List<Market> MARKETbots = createBotsList();
+    public static List<MarketBot> MARKETbots = createBotsList();
 
     public static final String botListFile = "src/main/resources/BotList.json";
     public static final boolean persistData = true;
@@ -36,7 +36,7 @@ public class Main {
                 KlineDatapack klineData = getKlineData();
                 marketPerformance = calculateMarketPerformance(klineData, 120);
                 busy = true;
-                MARKETbots.forEach(market -> market.runMarketBot(klineData));
+                MARKETbots.forEach(marketBot -> marketBot.runMarketBot(klineData));
                 if (updateCtr <= 1) {
                     updates(MARKETbots);
                     updateCtr = ((UPDATE_CYCLE_TIME * 60) / CYCLE_TIME);
@@ -48,27 +48,27 @@ public class Main {
         }, 0, 1000L * CYCLE_TIME);
     }
 
-    public static List<Market> createBotsList() {
+    public static List<MarketBot> createBotsList() {
         JSONParser parser = new JSONParser();
-        List<Market> marketBots = new ArrayList<>();
+        List<MarketBot> bots = new ArrayList<>();
         try (FileReader reader = new FileReader(botListFile)) {
             JSONArray marketJsonArr = (JSONArray) parser.parse(reader);
             marketJsonArr.forEach(m -> {
                 JSONObject market = (JSONObject) m;
-                marketBots.add(new Market(market.get("name").toString()));
+                bots.add(new MarketBot(market.get("name").toString()));
                 UPDATER.sendUpdateMsg(market.get("name").toString() + " Started.");
             });
         } catch (IOException | ParseException e) {
             e.printStackTrace();
         }
-        return marketBots;
+        return bots;
     }
 
     public static int updateCtr = 1;
-    private static void updates(List<Market> bots) {
+    private static void updates(List<MarketBot> bots) {
         String d = LocalDateTime.now().format(formatter2);
         String msg = "[" + d + "] Status update: (MP: " + df.format(Main.marketPerformance)  + "%)\n```";
-        for (Market s : bots) {
+        for (MarketBot s : bots) {
             msg += "\n";
             if (s.getCoinSymbol().equals("")) {
                 msg += "[" + s.getName() + "] " + "Searching...";
