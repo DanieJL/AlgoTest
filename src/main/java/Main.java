@@ -19,34 +19,32 @@ public class Main {
     public static final int CYCLE_TIME = 15;       //run the market test every X seconds
     public static final int UPDATE_CYCLE_TIME = 1; //how many minutes between each discord update (ends up taking longer because kline stuff)
     public final static double feePercent = .15;     //estimated total fee as a % - per transactions (both buy/sell and spread)
+    public static final double[] mpRanges = {8, 5, 3, 2, 1, .5, 0, -.5, -1, -2, -3, -5, -8};
+    private static final int mpRangeMins = 120;
 
     private static final DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("hh:mm a");
     private static final DecimalFormat df = new DecimalFormat("#.###");
-
     public static DiscordBot UPDATER = new DiscordBot();
     public static List<MarketBot> MARKETBots = createBotsList();
-
     public static final String botListFile = "src/main/resources/BotList.json";
 
     private static boolean busy = false;         //a check to keep commands from interrupting runMarketBot procedures
-    public static boolean getBusyMarket() {
-        return busy;
-    }
+    public static boolean getBusyMarket() {return busy;}
+    private static boolean pauseMarket = false;
+    public static boolean getPauseMarktet() {return pauseMarket;}
+    public static void setPauseMarket(boolean choice) {pauseMarket = choice;}
 
     private static final boolean backtest = false;
-    public static boolean isBacktest() {
-        return backtest;
-    }
-
-    private static final boolean backtestFromFile = false;
-    private static final String backTestFile = "5_16_2021_data.json";
+    public static boolean isBacktest() {return backtest;}
+    private static final boolean backtestFromFile = true;
+    private static final String backtestFile = "5_16_2021_data.json";
     private static final int backtestDateDeltaInDays = 30;
     private static final KlineInterval backtestInterval = KlineInterval.ONE_MINUTE;
 
     public static void main(String[] args) {
         //Uncomment this and run to generate a new backtesting datafile.
-//        generateBacktestDataFile(backTestFile, 30, 0);
-//        System.exit(0);
+        //generateBacktestDataFile(backTestFile, 30, 0);
+        //System.exit(0);
 
         busy = true;
         if (isBacktest()) {
@@ -59,7 +57,7 @@ public class Main {
             if (backtestFromFile) {
                 ObjectMapper objectMapper = new ObjectMapper();
                 try {
-                    klineData = objectMapper.readValue(new File(new File("backtestData"), backTestFile),
+                    klineData = objectMapper.readValue(new File(new File("backtestData"), backtestFile),
                             KlineDatapack.class);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -89,17 +87,19 @@ public class Main {
             new Timer().schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    KlineDatapack klineData = getKlineData(0, 0);
-                    marketPerformance = calculateMarketPerformance(klineData, 120);
-                    busy = true;
-                    MARKETBots.forEach(marketBot -> marketBot.runMarketBot(klineData));
-                    if (updateCtr <= 1) {
-                        updates(MARKETBots);
-                        updateCtr = ((UPDATE_CYCLE_TIME * 60) / CYCLE_TIME);
-                    } else {
-                        updateCtr--;
+                    if(!pauseMarket) {
+                        KlineDatapack klineData = getKlineData(0, 0);
+                        marketPerformance = calculateMarketPerformance(klineData, mpRangeMins);
+                        busy = true;
+                        MARKETBots.forEach(marketBot -> marketBot.runMarketBot(klineData));
+                        if (updateCtr <= 1) {
+                            updates(MARKETBots);
+                            updateCtr = ((UPDATE_CYCLE_TIME * 60) / CYCLE_TIME);
+                        } else {
+                            updateCtr--;
+                        }
+                        busy = false;
                     }
-                    busy = false;
                 }
             }, 0, 1000L * CYCLE_TIME);
         }

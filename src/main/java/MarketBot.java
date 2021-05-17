@@ -22,8 +22,6 @@ public class MarketBot {
     private final static Logger LOGGER = Logger.getLogger(MarketBot.class);
     private static final DecimalFormat df = new DecimalFormat("#.###");
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy hh:mm a");
-    public static final double[] mpRanges = {8, 5, 3, 2, 1, .5, 0, -.5, -1, -2, -3, -5, -8};  //the market performance ranges to find the best algos for
-
 
     private final ApiClient apiClient;
 
