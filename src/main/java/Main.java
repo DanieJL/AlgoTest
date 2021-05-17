@@ -1,3 +1,4 @@
+import com.fasterxml.jackson.databind.ObjectMapper;
 import enums.KlineInterval;
 import org.apache.log4j.Logger;
 import org.json.simple.JSONArray;
@@ -5,6 +6,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -25,26 +27,47 @@ public class Main {
     public static List<MarketBot> MARKETBots = createBotsList();
 
     public static final String botListFile = "src/main/resources/BotList.json";
-    public static final boolean persistData = true;
 
     private static boolean busy = false;         //a check to keep commands from interrupting runMarketBot procedures
-
     public static boolean getBusyMarket() {
         return busy;
     }
 
-    public static final boolean backtest = false;
-    public static final int backtestDateDeltaInDays = 30;
-    public static final KlineInterval backtestInterval = KlineInterval.ONE_MINUTE;
+    private static final boolean backtest = false;
+    public static boolean isBacktest() {
+        return backtest;
+    }
+
+    private static final boolean backtestFromFile = false;
+    private static final String backTestFile = "5_16_2021_data.json";
+    private static final int backtestDateDeltaInDays = 30;
+    private static final KlineInterval backtestInterval = KlineInterval.ONE_MINUTE;
 
     public static void main(String[] args) {
+        //Uncomment this and run to generate a new backtesting datafile.
+//        generateBacktestDataFile(backTestFile, 30, 0);
+//        System.exit(0);
+
         busy = true;
-        if (backtest) {
+        if (isBacktest()) {
             for (MarketBot marketBot : MARKETBots) {
                 marketBot.resetBot();
             }
             UPDATER.sendUpdateMsg("Backtest in progress.. Please do not send commands until completion confirmed.");
-            KlineDatapack klineData = getBacktestData(backtestDateDeltaInDays, backtestInterval);
+
+            KlineDatapack klineData = null;
+            if (backtestFromFile) {
+                ObjectMapper objectMapper = new ObjectMapper();
+                try {
+                    klineData = objectMapper.readValue(new File(new File("backtestData"), backTestFile),
+                            KlineDatapack.class);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                klineData = getBacktestData(backtestDateDeltaInDays, 0, backtestInterval);
+            }
+
             KlineDatapack intervalKeeperPack = new KlineDatapack();
             int iterations = klineData.getKline1mData().get(MarketUtil.allowedTickers[0]).size();
             for (int i = 0; i < iterations; i++) {
@@ -63,13 +86,10 @@ public class Main {
             busy = false;
             UPDATER.sendUpdateMsg("Backtest Completed.");
         } else {
-            for (MarketBot marketBot : MARKETBots) {
-                marketBot.resetBot();
-            }
             new Timer().schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    KlineDatapack klineData = getKlineData(0);
+                    KlineDatapack klineData = getKlineData(0, 0);
                     marketPerformance = calculateMarketPerformance(klineData, 120);
                     busy = true;
                     MARKETBots.forEach(marketBot -> marketBot.runMarketBot(klineData));
@@ -118,10 +138,10 @@ public class Main {
         Main.UPDATER.sendUpdateMsg(msg);
     }
 
-    public static KlineDatapack getKlineData(int daysAgo) {
+    public static KlineDatapack getKlineData(int daysAgoStart, int daysAgoEnd) {
         MarketUtil marketUtil = new MarketUtil();
         KlineDatapack klineData = new KlineDatapack();
-        Map<String, List<Candlestick>> kline1m = marketUtil.getKlineForAllTickers(KlineInterval.ONE_MINUTE, daysAgo);
+        Map<String, List<Candlestick>> kline1m = marketUtil.getKlineForAllTickers(KlineInterval.ONE_MINUTE, daysAgoStart, daysAgoEnd);
         klineData.setKline1mData(kline1m);
         return klineData;
     }
@@ -150,13 +170,25 @@ public class Main {
         return weightPts / totalVol;
     }
 
-    public static KlineDatapack getBacktestData(int backtestDateDeltaInDays, KlineInterval backtestInterval) {
+    public static KlineDatapack getBacktestData(int backtestDateDeltaInDays, int daysAgoEnd, KlineInterval backtestInterval) {
         MarketUtil marketUtil = new MarketUtil();
         KlineDatapack klineData = new KlineDatapack();
-        Map<String, List<Candlestick>> data = marketUtil.getKlineForAllTickers(backtestInterval, backtestDateDeltaInDays);
+        Map<String, List<Candlestick>> data = marketUtil.getKlineForAllTickers(backtestInterval, backtestDateDeltaInDays, daysAgoEnd);
         klineData.setKlineData(data, backtestInterval);
 
         return klineData;
+    }
+
+    public static void generateBacktestDataFile(String filename, int startDateDaysBack, int endDateDaysBack) {
+        KlineDatapack klineData = getBacktestData(startDateDaysBack, endDateDaysBack, backtestInterval);
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            File dir = new File("backtestData");
+            dir.mkdir();
+            objectMapper.writeValue(new File(dir, filename), klineData);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
 

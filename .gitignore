@@ -6,3 +6,4 @@ bot.config
 /.idea/
 /target/
 /shelf/
+/backtestData/

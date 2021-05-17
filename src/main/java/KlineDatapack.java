@@ -1,3 +1,4 @@
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import enums.KlineInterval;
 
 import java.util.HashMap;
@@ -11,20 +12,39 @@ import java.util.Map;
  */
 public class KlineDatapack {
 
+    public KlineDatapack() {
+
+    }
+
     private Map<String, List<Candlestick>> kline1mData;
+
+    @JsonIgnore
     private Map<String, List<Candlestick>> kline3mData;
+    @JsonIgnore
     private Map<String, List<Candlestick>> kline5mData;
+    @JsonIgnore
     private Map<String, List<Candlestick>> kline15mData;
+    @JsonIgnore
     private Map<String, List<Candlestick>> kline30mData;
+    @JsonIgnore
     private Map<String, List<Candlestick>> kline1hData;
+    @JsonIgnore
     private Map<String, List<Candlestick>> kline2hData;
+    @JsonIgnore
     private Map<String, List<Candlestick>> kline4hData;
+    @JsonIgnore
     private Map<String, List<Candlestick>> kline6hData;
+    @JsonIgnore
     private Map<String, List<Candlestick>> kline8hData;
+    @JsonIgnore
     private Map<String, List<Candlestick>> kline12hData;
+    @JsonIgnore
     private Map<String, List<Candlestick>> kline1dData;
+    @JsonIgnore
     private Map<String, List<Candlestick>> kline3dData;
+    @JsonIgnore
     private Map<String, List<Candlestick>> kline1wData;
+    @JsonIgnore
     private Map<String, List<Candlestick>> kline1MData;
 
     public Map<String, List<Candlestick>> getKline1mData() {

@@ -86,7 +86,7 @@ public class MarketBot {
     }
 
     public void saveCurrentValues() {
-        if (Main.persistData) {
+        if (!Main.isBacktest()) {
             JSONParser parser = new JSONParser();
             org.json.simple.JSONArray marketJsonArr = new org.json.simple.JSONArray();
             try (FileReader reader = new FileReader(Main.botListFile)) {
@@ -206,13 +206,13 @@ public class MarketBot {
             saveCurrentValues();
             String message = "[" + this.getName() + "] Bought " + coinSymbol + " at $" + coinValue + " [https://www.binance.us/en/trade/pro/" + coinSymbol + "]";
             LOGGER.info(message);
-            if (!Main.backtest)
+            if (!Main.isBacktest())
                 Main.UPDATER.sendUpdateMsg(message);
         }
     }
 
     public void updateCurrent() {
-        if (Main.backtest) {
+        if (Main.isBacktest()) {
             List<Candlestick> tickerKline = klineDatapack.getKline1mData().get(coinSymbol);
             if (tickerKline == null) {
                 LOGGER.info("No Data for " + coinSymbol);
@@ -283,7 +283,7 @@ public class MarketBot {
     public void sellCurrent() {
         String message = "[" + this.getName() + "] Sold " + coinSymbol + " at $" + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%)";
         LOGGER.info(message);
-        if (!Main.backtest)
+        if (!Main.isBacktest())
             Main.UPDATER.sendUpdateMsg(message);
         sellLogAdd();
         lastSymbol = coinSymbol;
@@ -302,7 +302,7 @@ public class MarketBot {
 
     private void sellLogAdd() {
         String d = LocalDateTime.now().format(formatter);
-        if (Main.backtest) {
+        if (Main.isBacktest()) {
             List<Candlestick> tickerKline = klineDatapack.getKline1mData().get(coinSymbol);
             Long closeTime = tickerKline.get(tickerKline.size() - 1).getCloseTime();
             SimpleDateFormat dt = new SimpleDateFormat("MM/dd/yyyy hh:mm a");

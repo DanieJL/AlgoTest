@@ -159,17 +159,27 @@ public class MarketUtil {
         return Vol / range;
     }
 
-    public List<Candlestick> getKlineData(String symbol, String interval, int daysAgo) {
+    public List<Candlestick> getKlineData(String symbol, String interval, int daysAgoStart, int daysAgoEnd) {
         List<Candlestick> allCandlesticks = new ArrayList<>();
         String url = "https://api.binance.us/api/v3/klines?symbol=" + symbol + "&interval=" + interval + "&limit=1000";
-        if (daysAgo != 0) {
-            long startTime = GeneralUtil.getDateDeltaUnix(-(daysAgo + 1));
+        if (daysAgoStart != 0) {
+            long startTime = GeneralUtil.getDateDeltaUnix(-(daysAgoStart + 1));
             url += "&startTime=" + startTime;
+        }
+        long endTime = 0;
+        if (daysAgoEnd != 0) {
+            endTime = GeneralUtil.getDateDeltaUnix(-(daysAgoEnd));
+            url += "&endTime=" + endTime;
         }
 
         while (true) {
             if (!allCandlesticks.isEmpty()) {
-                url = "https://api.binance.us/api/v3/klines?symbol=" + symbol + "&interval=" + interval + "&limit=1000" + "&startTime=" + allCandlesticks.get(allCandlesticks.size() - 1).getOpenTime();
+                url = "https://api.binance.us/api/v3/klines?symbol=" + symbol +
+                        "&interval=" + interval +
+                        "&limit=1000" +
+                        "&startTime=" + allCandlesticks.get(allCandlesticks.size() - 1).getOpenTime();
+                if (endTime != 0)
+                    url += "&endTime=" + endTime;
             }
 
             JSONArray data = new JSONArray();
@@ -193,18 +203,18 @@ public class MarketUtil {
 
             }
             allCandlesticks.addAll(candlesticks);
-            if (daysAgo == 0 || candlesticks.size() < 999)
+            if (daysAgoStart == 0 || candlesticks.size() < 999)
                 break;
         }
 
         return allCandlesticks;
     }
 
-    public Map<String, List<Candlestick>> getKlineForAllTickers(KlineInterval interval, int daysAgo) {
+    public Map<String, List<Candlestick>> getKlineForAllTickers(KlineInterval interval, int daysAgoStart, int daysAgoEnd) {
         Map<String, List<Candlestick>> klineMap = new HashMap<>();
         for (String ticker : allowedTickers) {
             LOGGER.info("Getting kline data for " + ticker);
-            List<Candlestick> klines = getKlineData(ticker, interval.getInterval(), daysAgo);
+            List<Candlestick> klines = getKlineData(ticker, interval.getInterval(), daysAgoStart, daysAgoEnd);
             klineMap.put(ticker, klines);
         }
         return klineMap;
