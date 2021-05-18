@@ -22,9 +22,9 @@ public class MarketBot {
     private final static Logger LOGGER = Logger.getLogger(MarketBot.class);
     private static final DecimalFormat df = new DecimalFormat("#.###");
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy hh:mm a");
-
     private final ApiClient apiClient;
 
+    private static final String[] godBotAlgos = {"30RSI_Fib02", "MACD_RSI_122C", "MACD_RSI_122D", "MACD_RSI_122C", "MACD_RSI_130C", "MACD_RSI_122C", "28RSI_Fib01", "30RSI_Fib03", "30RSI_Fib01", "MACD_RSI_130D", "28RSI_Fib02", "MACD_RSI_122D", "MACD_RSI_122D", "MACD_RSI_122C"};
     private final double trailingPercentBase = 2;   //the percent you want the stop loss trail to start at
 
     private String name = "Default";
@@ -161,6 +161,7 @@ public class MarketBot {
         Algorithms algos = new Algorithms(klineData);
         if (klineData == null)
             return "";
+        if(name.equals("godBot")) {algoName = getGodAlgo();}
         return switch (algoName) {
             case "fib" -> algos.fib618();
             case "rsiAndFib" -> algos.rsiAndFib();
@@ -202,7 +203,7 @@ public class MarketBot {
             trailingStopValue = (coinValue - ((trailingPercentBase / 100.0) * coinValue));
             marketPerformance = Main.getMarketPerformance();
             saveCurrentValues();
-            String message = "[" + this.getName() + "] Bought " + coinSymbol + " at $" + coinValue + " [https://www.binance.us/en/trade/pro/" + coinSymbol + "]";
+            String message = "[" + this.getName() + "] (" + this.algoName + ") Bought " + coinSymbol + " at $" + coinValue + " [https://www.binance.us/en/trade/pro/" + coinSymbol + "]";
             LOGGER.info(message);
             if (!Main.isBacktest())
                 Main.UPDATER.sendUpdateMsg(message);
@@ -279,7 +280,7 @@ public class MarketBot {
     }
 
     public void sellCurrent() {
-        String message = "[" + this.getName() + "] Sold " + coinSymbol + " at $" + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%)";
+        String message = "[" + this.getName() + "] (" + this.algoName + ") Sold " + coinSymbol + " at $" + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%)";
         LOGGER.info(message);
         if (!Main.isBacktest())
             Main.UPDATER.sendUpdateMsg(message);
@@ -338,6 +339,23 @@ public class MarketBot {
         file.delete();
     }
 
+    private String getGodAlgo(){
+        String algo = "";
+        double mp = Main.getMarketPerformance();
+        for (int i = 0; i < Main.mpRanges.length; i++) {
+            if(i==0){
+                if(mp > Main.mpRanges[i]) { algo = godBotAlgos[i];}
+            }
+            else if(i==Main.mpRanges.length-1){
+                if((mp>=Main.mpRanges[i]) && (mp<Main.mpRanges[i-1])) { algo = godBotAlgos[i]; }
+                else if(mp<Main.mpRanges[i]) {algo = godBotAlgos[i+1];}
+            }
+            else if((mp>=Main.mpRanges[i]) && (mp<Main.mpRanges[i-1])){
+                algo = godBotAlgos[i];
+            }
+        }
+        return algo;
+    }
 /*    public static void updateBinanceTickers() {
         String url = "https://www.binance.us/gateway-api/v2/public/asset-service/product/get-products?includeEtf=false";
 

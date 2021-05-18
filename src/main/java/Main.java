@@ -15,39 +15,39 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class Main {
-    private final static Logger LOGGER = Logger.getLogger(Main.class);
-    public static final int CYCLE_TIME = 15;       //run the market test every X seconds
-    public static final int UPDATE_CYCLE_TIME = 1; //how many minutes between each discord update (ends up taking longer because kline stuff)
-    public final static double feePercent = .15;     //estimated total fee as a % - per transactions (both buy/sell and spread)
-    public static final double[] mpRanges = {8, 5, 3, 2, 1, .5, 0, -.5, -1, -2, -3, -5, -8};
-    private static final int mpRangeMins = 120;
-
     private static final DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("hh:mm a");
     private static final DecimalFormat df = new DecimalFormat("#.###");
     public static DiscordBot UPDATER = new DiscordBot();
     public static List<MarketBot> MARKETBots = createBotsList();
     public static final String botListFile = "src/main/resources/BotList.json";
+    private final static Logger LOGGER = Logger.getLogger(Main.class);
 
-    private static boolean busy = false;         //a check to keep commands from interrupting runMarketBot procedures
-    public static boolean getBusyMarket() {return busy;}
-    private static boolean pauseMarket = false;
-    public static boolean getPauseMarktet() {return pauseMarket;}
-    public static void setPauseMarket(boolean choice) {pauseMarket = choice;}
+    public static final int CYCLE_TIME = 15;         //run the market test every X seconds (when live)
+    public static final int UPDATE_CYCLE_TIME = 2;   //how many minutes between each discord update (ends up taking longer because kline stuff)
+    public final static double feePercent = .15;     //estimated total fee as a % - per transactions (both buy/sell and spread)
+    public static final double[] mpRanges = {11, 8, 5, 3, 2, 1, 0, -1, -2, -3, -5, -8, -11}; //needs to be ordered greater to lesser
+    private static final int mpCalcRange = 120;      //how many klines to use to calculate market performance
+    private static boolean pauseMarket = false;       //used to pause live market, set to true to start paused
 
     private static final boolean backtest = false;
-    public static boolean isBacktest() {return backtest;}
     private static final boolean backtestFromFile = true;
-    private static final String backtestFile = "5_16_2021_data.json";
+    private static final String backtestFile = "5_18_2021_year.json";
     private static final int backtestDateDeltaInDays = 30;
+
+    private static boolean busy = false;         //a check to keep commands from interrupting runMarketBot procedures
     private static final KlineInterval backtestInterval = KlineInterval.ONE_MINUTE;
+    public static boolean isBacktest() {return backtest;}
+    public static boolean getBusyMarket() {return busy;}
+    public static boolean getPauseMarket() {return pauseMarket;}
+    public static void setPauseMarket(boolean choice) {pauseMarket = choice;}
 
     public static void main(String[] args) {
         //Uncomment this and run to generate a new backtesting datafile.
-        //generateBacktestDataFile(backTestFile, 30, 0);
+        //generateBacktestDataFile(backtestFile, 365, 0);
         //System.exit(0);
 
-        busy = true;
         if (isBacktest()) {
+            busy = true;
             for (MarketBot marketBot : MARKETBots) {
                 marketBot.resetBot();
             }
@@ -78,7 +78,7 @@ public class Main {
                     break;
                 }
                 intervalKeeperPack.setKline1mData(incrementedData);
-                marketPerformance = calculateMarketPerformance(intervalKeeperPack, 120);
+                marketPerformance = calculateMarketPerformance(intervalKeeperPack, mpCalcRange);
                 MARKETBots.forEach(marketBot -> marketBot.runMarketBot(intervalKeeperPack));
             }
             busy = false;
@@ -87,9 +87,9 @@ public class Main {
             new Timer().schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    if(!pauseMarket) {
+                    if (!pauseMarket) {
                         KlineDatapack klineData = getKlineData(0, 0);
-                        marketPerformance = calculateMarketPerformance(klineData, mpRangeMins);
+                        marketPerformance = calculateMarketPerformance(klineData, mpCalcRange);
                         busy = true;
                         MARKETBots.forEach(marketBot -> marketBot.runMarketBot(klineData));
                         if (updateCtr <= 1) {
@@ -122,7 +122,6 @@ public class Main {
     }
 
     public static int updateCtr = 1;
-
     private static void updates(List<MarketBot> bots) {
         String d = LocalDateTime.now().format(formatter2);
         String msg = "[" + d + "] Status update: (MP: " + df.format(Main.marketPerformance) + "%)\n```";
@@ -147,10 +146,7 @@ public class Main {
     }
 
     private static double marketPerformance = 0;
-
-    public static double getMarketPerformance() {
-        return marketPerformance;
-    }
+    public static double getMarketPerformance() {return marketPerformance;}
 
     private static double calculateMarketPerformance(KlineDatapack data, int rangeInMinutes) {
         double totalVol = 0;
@@ -191,12 +187,3 @@ public class Main {
         }
     }
 }
-
-//TODO: algo stuff
-//RSI seems off?
-//Scale acceptable buys based on market conditions, positive tend = slightly looser reqs
-//Block things that had any major jumps in price?
-//Volatility implementing
-//Implement sentiment scalping?
-//Limit gains per day? (stop trading after x% gain (or loss) on a day?)
-

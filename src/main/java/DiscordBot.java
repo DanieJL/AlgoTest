@@ -19,7 +19,6 @@ public class DiscordBot extends ListenerAdapter {
     private final static Logger LOGGER = Logger.getLogger(DiscordBot.class);
     private static final DecimalFormat df = new DecimalFormat("#.###");
 
-
     DiscordBot() {
         JDABuilder BOT = JDABuilder.createDefault(ConfigHandler.getBotConfig("discord.token"));
         BOT.addEventListeners(this);
@@ -54,7 +53,7 @@ public class DiscordBot extends ListenerAdapter {
         }
         if (messageText.equals("!pause")) {
             if(!Main.getBusyMarket() && !Main.isBacktest()) {
-                if (Main.getPauseMarktet()) {
+                if (Main.getPauseMarket()) {
                     this.channel.sendMessage("Market unpaused.").queue();
                     Main.setPauseMarket(false);
                 } else {
@@ -68,9 +67,9 @@ public class DiscordBot extends ListenerAdapter {
         }
         if (!Main.getBusyMarket()) { //make sure these commands cannot interfere with bot, simultaneous stuff causes crash
             Main.MARKETBots.sort(Comparator.comparing(MarketBot::getAccountVal).reversed());
-            String[] MPcurrentBestName = new String[Main.mpRanges.length];                    //the current best performers in each range
-            double[] MPcurrentBestValue = new double[Main.mpRanges.length];
-            int[] MPcurrentBestTradeCount = new int[Main.mpRanges.length];
+            String[] MPcurrentBestName = new String[Main.mpRanges.length+1];                    //the current best performers in each range
+            double[] MPcurrentBestValue = new double[Main.mpRanges.length+1];
+            int[] MPcurrentBestTradeCount = new int[Main.mpRanges.length+1];
             for (MarketBot marketBot : Main.MARKETBots) {
                 if (messageText.contains("!sell")) {
                     String[] cmdSplit = messageText.split(" ", 3);
@@ -150,26 +149,30 @@ public class DiscordBot extends ListenerAdapter {
                             File file = new File(dir, marketBot.getName() + "_sellLog.txt");
                             BufferedReader br = new BufferedReader(new FileReader(file));
                             String st;
-                            double[] coinPerformance = new double[Main.mpRanges.length];
-                            int[] coinPerformanceTrades = new int[Main.mpRanges.length];
+                            double[] coinPerformance = new double[Main.mpRanges.length+1];
+                            int[] coinPerformanceTrades = new int[Main.mpRanges.length+1];
                             while ((st = br.readLine()) != null) {
                                 double value = Double.parseDouble(st.substring(st.lastIndexOf("(") + 1, st.lastIndexOf("%")));
                                 double mpValue = Double.parseDouble(st.substring(st.lastIndexOf("[") + 1, st.lastIndexOf("]")));
 
                                 for (int i = 0; i < Main.mpRanges.length; i++) {
-                                    if (mpValue < Main.mpRanges[i]) {
-                                        continue;
+                                    if(i==0){
+                                        if(mpValue > Main.mpRanges[i]) {coinPerformance[i]+= value; coinPerformanceTrades[i]++;}
                                     }
-                                    coinPerformance[i] += value;
-                                    coinPerformanceTrades[i] += 1;
-                                    break;
+                                    else if(i==Main.mpRanges.length-1){
+                                        if((mpValue>=Main.mpRanges[i]) && (mpValue<Main.mpRanges[i-1])) {coinPerformance[i]+=value; coinPerformanceTrades[i]++;}
+                                        else if(mpValue<Main.mpRanges[i]) {coinPerformance[i+1]+=value; coinPerformanceTrades[i+1]++;}
+                                    }
+                                    else if((mpValue>=Main.mpRanges[i]) && (mpValue<Main.mpRanges[i-1])){
+                                        coinPerformance[i]+=value; coinPerformanceTrades[i]++;
+                                    }
                                 }
                             }
-                            for (int i = 0; i < Main.mpRanges.length; i++) { //this loop makes it go by avg instead of overall
+                            for (int i = 0; i < coinPerformance.length; i++) { //this loop makes it go by avg instead of overall
                                 coinPerformance[i] = coinPerformance[i] / coinPerformanceTrades[i];
                             }
                             if (cmdSplit[1].equals("all")) {
-                                for (int i = 0; i < Main.mpRanges.length; i++) {
+                                for (int i = 0; i < Main.mpRanges.length+1; i++) {
                                     if (coinPerformance[i] > MPcurrentBestValue[i]) {
                                         MPcurrentBestValue[i] = coinPerformance[i];
                                         MPcurrentBestTradeCount[i] = coinPerformanceTrades[i];
@@ -178,15 +181,14 @@ public class DiscordBot extends ListenerAdapter {
                                 }
                             } else {
                                 String msg = marketBot.getName() + " market performance:\n```";
-                                String plus = "+";
                                 for (int i = 0; i < Main.mpRanges.length; i++) {
-                                    if (Main.mpRanges[i] <= 0) {
-                                        plus = "";
-                                        if (Main.mpRanges[i] == 0) {
-                                            plus = " ";
+                                    if(i==0){ msg+= (">+" + Main.mpRanges[i] + "%: [" + marketBot.getName() + "] " + coinPerformanceTrades[i] + " trades, " + df.format(coinPerformance[i]) + "%avg\n");}
+                                    else{
+                                        msg += (Main.mpRanges[i] + " to " + Main.mpRanges[i-1] + "%: [" + marketBot.getName() + "] " + coinPerformanceTrades[i] + " trades, " + df.format(coinPerformance[i]) + "%avg\n");
+                                        if(i==Main.mpRanges.length-1){
+                                            msg += ("<" + Main.mpRanges[i] + "%: [" + marketBot.getName() + "] " + coinPerformanceTrades[i+1] + " trades, " + df.format(coinPerformance[i+1]) + "%avg\n");
                                         }
                                     }
-                                    msg += plus + Main.mpRanges[i] + "%: [" + marketBot.getName() + "] (" + coinPerformanceTrades[i] + " trades) " + df.format(coinPerformance[i]) + "%avg\n";
                                 }
                                 msg += "```";
                                 this.channel.sendMessage(msg).queue();
@@ -199,20 +201,23 @@ public class DiscordBot extends ListenerAdapter {
             }
             if (messageText.equals("!mp all")) {
                 String msg = "Overall market performance:\n```";
-                String plus = "+";
                 for (int i = 0; i < Main.mpRanges.length; i++) {
-                    if (Main.mpRanges[i] <= 0) {
-                        plus = "";
-                        if(Main.mpRanges[i]==0) {
-                            plus = " ";
+                    if(i==0){ msg+= (">+" + Main.mpRanges[i] + "%: [" + MPcurrentBestName[i] + "] " + MPcurrentBestTradeCount[i] + " trades, " + df.format(MPcurrentBestValue[i]) + "%avg\n");}
+                    else{
+                        msg+= (Main.mpRanges[i] + " to " + Main.mpRanges[i-1] + "%: [" + MPcurrentBestName[i] + "] " + MPcurrentBestTradeCount[i] + " trades, " + df.format(MPcurrentBestValue[i]) + "%avg\n");
+                        if(i==Main.mpRanges.length-1){
+                            msg += ("<" + Main.mpRanges[i] + "%: [" + MPcurrentBestName[i+1] + "] " + MPcurrentBestTradeCount[i+1] + " trades, " + df.format(MPcurrentBestValue[i+1]) + "%avg\n");
                         }
                     }
-                    if (Main.mpRanges[i] == 0) {
-                        plus = " ";
-                    }
-                    msg += plus + Main.mpRanges[i] + "%: [" + MPcurrentBestName[i] + "] (" + MPcurrentBestTradeCount[i] + " trades) " + df.format(MPcurrentBestValue[i]) + "%avg\n";
                 }
-                msg += "```";
+                msg += "```{";
+                for(int i = 0; i < MPcurrentBestName.length; i++) {
+                    msg += "\"" + MPcurrentBestName[i] + "\"";
+                    if(i!=MPcurrentBestName.length-1) {
+                        msg += ", ";
+                    }
+                }
+                msg += "};";
                 this.channel.sendMessage(msg).queue();
             }
         } else {
