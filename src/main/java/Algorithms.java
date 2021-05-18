@@ -13,7 +13,7 @@ public class Algorithms {
         this.klineData = klineData;
     }
 
-    public String rsiLT30() {
+    public String rsiLT30(){
         for (String ticker : MarketUtil.allowedTickers) {
             List<Candlestick> klineData = this.klineData.getKline1mData().get(ticker);
             if (klineData == null || klineData.isEmpty())

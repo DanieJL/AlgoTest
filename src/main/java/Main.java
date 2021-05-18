@@ -1,4 +1,5 @@
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import enums.KlineInterval;
 import org.apache.log4j.Logger;
 import org.json.simple.JSONArray;
@@ -177,7 +178,7 @@ public class Main {
 
     public static void generateBacktestDataFile(String filename, int startDateDaysBack, int endDateDaysBack) {
         KlineDatapack klineData = getBacktestData(startDateDaysBack, endDateDaysBack, backtestInterval);
-        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectMapper objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);;
         try {
             File dir = new File("backtestData");
             dir.mkdir();
