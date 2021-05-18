@@ -1,13 +1,55 @@
 [
     {
         "name": "Fib618CheckOnly",
-        "algoName": "fib"
+        "algoName": "fib",
+        "persist": {
+            "lastTicker": "temporary",
+            "currentPaid": 44.1919,
+            "numCoinsHeld": 22.611609819899122,
+            "trailingPercent": 2.699561684381077,
+            "accountVal": 1228.7555785109942,
+            "currentTicker": "SOLUSD",
+            "marketPerformance": -5.845439978051554,
+            "currentPeak": 54.3541,
+            "currentValue": 54.3418,
+            "trailingStop": 52.886777542509826,
+            "currentPerChange": 22.967783688866064
+        }
     },
     {
-        "name": "RSILT30CheckOnly"
+        "name": "RSILT30CheckOnly",
+        "persist": {
+            "lastTicker": "temporary",
+            "currentPaid": 1.0453,
+            "numCoinsHeld": 955.9456615325745,
+            "trailingPercent": 0.9347747058260794,
+            "accountVal": 1052.687362479671,
+            "currentTicker": "BATUSD",
+            "marketPerformance": -5.845439978051554,
+            "currentPeak": 1.1012,
+            "currentValue": 1.1012,
+            "trailingStop": 1.090906260939443,
+            "currentPerChange": 5.3477470582607936
+        }
     },
     {
         "name": "Fib618ANDRSILT30",
-        "algoName": "rsiAndFib"
+        "algoName": "rsiAndFib",
+        "persist": {
+            "lastTicker": "temporary",
+            "currentPaid": 4414.7362,
+            "numCoinsHeld": 0.22634421508583003,
+            "trailingPercent": 1.2550300242175283,
+            "accountVal": 1084.6888751699364,
+            "currentTicker": "MKRUSD",
+            "marketPerformance": -4.761233528055158,
+            "currentPeak": 4792.2094,
+            "currentValue": 4792.2094,
+            "trailingStop": 4732.065733206625,
+            "currentPerChange": 8.550300242175283
+        }
+    },
+    {
+        "name": "godBot"
     }
 ]

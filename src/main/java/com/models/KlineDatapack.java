@@ -1,5 +1,8 @@
+package com.models;
+
+import com.enums.KlineInterval;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import enums.KlineInterval;
+import com.market.MarketDataHandler;
 
 import java.util.HashMap;
 import java.util.List;
@@ -57,7 +60,7 @@ public class KlineDatapack {
 
     public Map<String, List<Candlestick>> getKline1mDataIncremented(int minutes) {
         Map<String, List<Candlestick>> newMap = new HashMap<>();
-        for (String ticker : MarketUtil.allowedTickers) {
+        for (String ticker : MarketDataHandler.allowedTickers) {
             List<Candlestick> newK;
             if (minutes + 999 <= kline1mData.get(ticker).size()) {
                 newK = kline1mData.get(ticker).subList(minutes, minutes + 999);

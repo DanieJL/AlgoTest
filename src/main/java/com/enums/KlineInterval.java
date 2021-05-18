@@ -1,4 +1,4 @@
-package enums;
+package com.enums;
 
 public enum KlineInterval {
     ONE_MINUTE("1m"),
@@ -18,7 +18,7 @@ public enum KlineInterval {
     ONE_MONTH("1M");
 
 
-    private String interval;
+    private final String interval;
 
     KlineInterval(String interval) {
         this.interval = interval;
