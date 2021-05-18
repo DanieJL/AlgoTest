@@ -1,3 +1,8 @@
+package com.market;
+
+import com.models.Candlestick;
+import com.models.KlineDatapack;
+import com.util.MarketUtil;
 import org.apache.log4j.Logger;
 
 import java.util.List;
@@ -13,8 +18,8 @@ public class Algorithms {
         this.klineData = klineData;
     }
 
-    public String rsiLT30(){
-        for (String ticker : MarketUtil.allowedTickers) {
+    public String rsiLT30() {
+        for (String ticker : MarketDataHandler.allowedTickers) {
             List<Candlestick> klineData = this.klineData.getKline1mData().get(ticker);
             if (klineData == null || klineData.isEmpty())
                 continue;
@@ -27,7 +32,7 @@ public class Algorithms {
     }
 
     public String fib618() {
-        for (String ticker : MarketUtil.allowedTickers) {
+        for (String ticker : MarketDataHandler.allowedTickers) {
             List<Candlestick> klineData = this.klineData.getKline1mData().get(ticker);
             if (klineData == null || klineData.isEmpty())
                 continue;
@@ -48,7 +53,7 @@ public class Algorithms {
     }
 
     public String rsiAndFib() {
-        for (String ticker : MarketUtil.allowedTickers) {
+        for (String ticker : MarketDataHandler.allowedTickers) {
             List<Candlestick> klineData = this.klineData.getKline1mData().get(ticker);
             if (klineData == null || klineData.isEmpty())
                 continue;
@@ -75,7 +80,7 @@ public class Algorithms {
     public String lowRSIanyFib(int maxRSI, double fibRange, double volumeMin) {
         double best = 999;
         String bestTicker = "";
-        for (String ticker : MarketUtil.allowedTickers) {
+        for (String ticker : MarketDataHandler.allowedTickers) {
             List<Candlestick> klineData = this.klineData.getKline1mData().get(ticker);
             if (klineData == null || klineData.isEmpty())
                 continue;
@@ -108,7 +113,7 @@ public class Algorithms {
     public String RSI_MACD_PER(int MACD_RSImax, int rsiRange, int maRangeSmall, int maRangeBig, int percentRange1, double percentMin1, int percentRange2, double percentMin2, int volumeRange, double volumeUSDMin) {
         double best = 999;
         String bestTicker = "";
-        for (String ticker : MarketUtil.allowedTickers) {
+        for (String ticker : MarketDataHandler.allowedTickers) {
             List<Candlestick> klineData = this.klineData.getKline1mData().get(ticker);
             if (klineData == null || klineData.isEmpty())
                 continue;

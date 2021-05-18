@@ -1,3 +1,5 @@
+package com.models;
+
 public class Candlestick {
     private Long openTime;
     private double open;
@@ -8,6 +10,7 @@ public class Candlestick {
     public Candlestick() {
 
     }
+
     public Candlestick(Long openTime, double open, double close, double volume, Long closeTime) {
         this.openTime = openTime;
         this.open = open;

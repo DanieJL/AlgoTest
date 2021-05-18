@@ -1,33 +1,34 @@
+package com.market;
+
+import com.BotRunner;
+import com.constants.Constants;
+import com.models.Candlestick;
+import com.models.KlineDatapack;
+import com.util.ApiClient;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import util.ApiClient;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+
 public class MarketBot {
     private final static Logger LOGGER = Logger.getLogger(MarketBot.class);
-    private static final DecimalFormat df = new DecimalFormat("#.###");
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy hh:mm a");
     private final ApiClient apiClient;
+    public static final double trailingPercentBase = 2;
 
-    private static final String[] godBotAlgos = {"30RSI_Fib02", "MACD_RSI_122C", "MACD_RSI_122D", "MACD_RSI_122C", "MACD_RSI_130C", "MACD_RSI_122C", "28RSI_Fib01", "30RSI_Fib03", "30RSI_Fib01", "MACD_RSI_130D", "28RSI_Fib02", "MACD_RSI_122D", "MACD_RSI_122D", "MACD_RSI_122C"};
-    private final double trailingPercentBase = 2;   //the percent you want the stop loss trail to start at
-
-    private String name = "Default";
+    private final String name;
     private String coinSymbol = "";
     private double coinValue = 0;
     private double coinValuePaid = 0;
@@ -39,11 +40,11 @@ public class MarketBot {
     private String algoName = "default";
     private double numCoinsHeld = 0;
     private double accountVal = 1000;
-    private double marketPerformance = 0;  //the overall market performance at time of last purchase
+    private double marketPerformance = 0;  //the overall com.market performance at time of last purchase
 
     private KlineDatapack klineDatapack;
 
-    MarketBot(String name) {
+    public MarketBot(String name) {
         this.name = name;
         loadCurrentValues();
         apiClient = new ApiClient();
@@ -84,10 +85,10 @@ public class MarketBot {
     }
 
     public void saveCurrentValues() {
-        if (!Main.isBacktest()) {
+        if (!BotRunner.isBacktest()) {
             JSONParser parser = new JSONParser();
             org.json.simple.JSONArray marketJsonArr = new org.json.simple.JSONArray();
-            try (FileReader reader = new FileReader(Main.botListFile)) {
+            try (FileReader reader = new FileReader(Constants.botListFileName)) {
                 marketJsonArr = (org.json.simple.JSONArray) parser.parse(reader);
 
                 org.json.simple.JSONObject marketValues = null;
@@ -119,7 +120,7 @@ public class MarketBot {
             } catch (IOException | ParseException e) {
                 e.printStackTrace();
             }
-            try (FileWriter file = new FileWriter(Main.botListFile)) {
+            try (FileWriter file = new FileWriter(Constants.botListFileName)) {
                 file.write(new JSONArray(marketJsonArr.toJSONString()).toString(4));
                 file.flush();
             } catch (IOException e) {
@@ -131,7 +132,7 @@ public class MarketBot {
     private void loadCurrentValues() {
         JSONParser parser = new JSONParser();
         org.json.simple.JSONArray marketJsonArr;
-        try (FileReader reader = new FileReader(Main.botListFile)) {
+        try (FileReader reader = new FileReader(Constants.botListFileName)) {
             marketJsonArr = (org.json.simple.JSONArray) parser.parse(reader);
 
             for (Object m : marketJsonArr) {
@@ -161,7 +162,9 @@ public class MarketBot {
         Algorithms algos = new Algorithms(klineData);
         if (klineData == null)
             return "";
-        if(name.equals("godBot")) {algoName = getGodAlgo();}
+        if (name.equals("godBot")) {
+            algoName = getGodAlgo();
+        }
         return switch (algoName) {
             case "fib" -> algos.fib618();
             case "rsiAndFib" -> algos.rsiAndFib();
@@ -198,20 +201,20 @@ public class MarketBot {
     private void buyNew(String newTicker) {
         if (!newTicker.equals("")) {
             coinSymbol = newTicker;
-            accountVal -= (accountVal * ((Main.feePercent / 100) / 2));
+            accountVal -= (accountVal * ((Constants.feePercent / 100) / 2));
             updateCurrent();
             trailingStopValue = (coinValue - ((trailingPercentBase / 100.0) * coinValue));
-            marketPerformance = Main.getMarketPerformance();
+            marketPerformance = MarketDataHandler.getMarketPerformance();
             saveCurrentValues();
             String message = "[" + this.getName() + "] (" + this.algoName + ") Bought " + coinSymbol + " at $" + coinValue + " [https://www.binance.us/en/trade/pro/" + coinSymbol + "]";
             LOGGER.info(message);
-            if (!Main.isBacktest())
-                Main.UPDATER.sendUpdateMsg(message);
+            if (!BotRunner.isBacktest())
+                BotRunner.UPDATER.sendUpdateMsg(message);
         }
     }
 
     public void updateCurrent() {
-        if (Main.isBacktest()) {
+        if (BotRunner.isBacktest()) {
             List<Candlestick> tickerKline = klineDatapack.getKline1mData().get(coinSymbol);
             if (tickerKline == null) {
                 LOGGER.info("No Data for " + coinSymbol);
@@ -280,10 +283,10 @@ public class MarketBot {
     }
 
     public void sellCurrent() {
-        String message = "[" + this.getName() + "] (" + this.algoName + ") Sold " + coinSymbol + " at $" + df.format(coinValue) + " (" + df.format(coinPercentChange) + "%)";
+        String message = "[" + this.getName() + "] (" + this.algoName + ") Sold " + coinSymbol + " at $" + Constants.decimalFormat.format(coinValue) + " (" + Constants.decimalFormat.format(coinPercentChange) + "%)";
         LOGGER.info(message);
-        if (!Main.isBacktest())
-            Main.UPDATER.sendUpdateMsg(message);
+        if (!BotRunner.isBacktest())
+            BotRunner.UPDATER.sendUpdateMsg(message);
         sellLogAdd();
         lastSymbol = coinSymbol;
         coinValue = 0;
@@ -295,13 +298,13 @@ public class MarketBot {
         coinPercentChange = 0;
         numCoinsHeld = 0;
         marketPerformance = 0;
-        accountVal -= (accountVal * ((Main.feePercent / 100) / 2));
+        accountVal -= (accountVal * ((Constants.feePercent / 100) / 2));
         saveCurrentValues();
     }
 
     private void sellLogAdd() {
-        String d = LocalDateTime.now().format(formatter);
-        if (Main.isBacktest()) {
+        String d = LocalDateTime.now().format(Constants.longDateFormat);
+        if (BotRunner.isBacktest()) {
             List<Candlestick> tickerKline = klineDatapack.getKline1mData().get(coinSymbol);
             Long closeTime = tickerKline.get(tickerKline.size() - 1).getCloseTime();
             SimpleDateFormat dt = new SimpleDateFormat("MM/dd/yyyy hh:mm a");
@@ -315,7 +318,7 @@ public class MarketBot {
             if (file.length() != 0) {
                 fw.write("\n");
             }
-            fw.write("(" + d + ") Sold " + coinSymbol + " (" + df.format(coinPercentChange) + "%) Market Performance @ buy: [" + df.format(marketPerformance) + "]");
+            fw.write("(" + d + ") Sold " + coinSymbol + " (" + Constants.decimalFormat.format(coinPercentChange) + "%) Market Performance @ buy: [" + Constants.decimalFormat.format(marketPerformance) + "]");
             fw.close();
         } catch (IOException e) {
             LOGGER.error("Failed to write to sellLog. Error: " + e.getMessage());
@@ -339,19 +342,22 @@ public class MarketBot {
         file.delete();
     }
 
-    private String getGodAlgo(){
+    private String getGodAlgo() {
         String algo = "";
-        double mp = Main.getMarketPerformance();
-        for (int i = 0; i < Main.mpRanges.length; i++) {
-            if(i==0){
-                if(mp > Main.mpRanges[i]) { algo = godBotAlgos[i];}
-            }
-            else if(i==Main.mpRanges.length-1){
-                if((mp>=Main.mpRanges[i]) && (mp<Main.mpRanges[i-1])) { algo = godBotAlgos[i]; }
-                else if(mp<Main.mpRanges[i]) {algo = godBotAlgos[i+1];}
-            }
-            else if((mp>=Main.mpRanges[i]) && (mp<Main.mpRanges[i-1])){
-                algo = godBotAlgos[i];
+        double mp = MarketDataHandler.getMarketPerformance();
+        for (int i = 0; i < Constants.mpRanges.length; i++) {
+            if (i == 0) {
+                if (mp > Constants.mpRanges[i]) {
+                    algo = Constants.godBotAlgos[i];
+                }
+            } else if (i == Constants.mpRanges.length - 1) {
+                if ((mp >= Constants.mpRanges[i]) && (mp < Constants.mpRanges[i - 1])) {
+                    algo = Constants.godBotAlgos[i];
+                } else if (mp < Constants.mpRanges[i]) {
+                    algo = Constants.godBotAlgos[i + 1];
+                }
+            } else if ((mp >= Constants.mpRanges[i]) && (mp < Constants.mpRanges[i - 1])) {
+                algo = Constants.godBotAlgos[i];
             }
         }
         return algo;

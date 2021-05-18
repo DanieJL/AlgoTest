@@ -1,38 +1,18 @@
-import enums.KlineInterval;
-import org.apache.log4j.Logger;
-import org.json.JSONArray;
-import util.ApiClient;
-import util.GeneralUtil;
+package com.util;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.*;
+import com.models.Candlestick;
+import org.apache.log4j.Logger;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 
 public class MarketUtil {
     private final static Logger LOGGER = Logger.getLogger(MarketUtil.class);
-    public static String[] allowedTickers;
-    private final ApiClient apiClient;
 
     public MarketUtil() {
-        apiClient = new ApiClient();
     }
 
-    static {
-        /*Load list of allowed coins into array*/
-        try {
-            BufferedReader br = new BufferedReader(new FileReader("allowed.txt"));
-            String str;
-            List<String> list = new ArrayList<>();
-            while ((str = br.readLine()) != null) {
-                list.add(str);
-            }
-            allowedTickers = list.toArray(new String[0]);
-            br.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     private double calcSmmaUp(List<Candlestick> candlesticks, double n, int i, double avgUt1) {
 
@@ -157,66 +137,5 @@ public class MarketUtil {
             }
         }
         return Vol / range;
-    }
-
-    public List<Candlestick> getKlineData(String symbol, String interval, int daysAgoStart, int daysAgoEnd) {
-        List<Candlestick> allCandlesticks = new ArrayList<>();
-        String url = "https://api.binance.us/api/v3/klines?symbol=" + symbol + "&interval=" + interval + "&limit=1000";
-        if (daysAgoStart != 0) {
-            long startTime = GeneralUtil.getDateDeltaUnix(-(daysAgoStart + 1));
-            url += "&startTime=" + startTime;
-        }
-        long endTime = 0;
-        if (daysAgoEnd != 0) {
-            endTime = GeneralUtil.getDateDeltaUnix(-(daysAgoEnd));
-            url += "&endTime=" + endTime;
-        }
-
-        while (true) {
-            if (!allCandlesticks.isEmpty()) {
-                url = "https://api.binance.us/api/v3/klines?symbol=" + symbol +
-                        "&interval=" + interval +
-                        "&limit=1000" +
-                        "&startTime=" + allCandlesticks.get(allCandlesticks.size() - 1).getOpenTime();
-                if (endTime != 0)
-                    url += "&endTime=" + endTime;
-            }
-
-            JSONArray data = new JSONArray();
-            try {
-                String response = apiClient.makeAPICall(url);
-                if (apiClient.isValidJsonArr(response))
-                    data = new JSONArray(response);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            List<Candlestick> candlesticks = new ArrayList<>();
-
-            for (int i = 0; i < data.length(); i++) {
-                JSONArray stick = data.getJSONArray(i);
-                candlesticks.add(new Candlestick(stick.getLong(0),
-                        Double.parseDouble(stick.getString(1)),
-                        Double.parseDouble(stick.getString(4)),
-                        Double.parseDouble(stick.getString(7)),
-                        stick.getLong(6)));
-
-            }
-            allCandlesticks.addAll(candlesticks);
-            if (daysAgoStart == 0 || candlesticks.size() < 999)
-                break;
-        }
-
-        return allCandlesticks;
-    }
-
-    public Map<String, List<Candlestick>> getKlineForAllTickers(KlineInterval interval, int daysAgoStart, int daysAgoEnd) {
-        Map<String, List<Candlestick>> klineMap = new HashMap<>();
-        for (String ticker : allowedTickers) {
-            LOGGER.info("Getting kline data for " + ticker);
-            List<Candlestick> klines = getKlineData(ticker, interval.getInterval(), daysAgoStart, daysAgoEnd);
-            klineMap.put(ticker, klines);
-        }
-        return klineMap;
     }
 }
