@@ -23,12 +23,12 @@ public class DiscordHandler extends ListenerAdapter {
     private final static Logger LOGGER = Logger.getLogger(DiscordHandler.class);
 
     public DiscordHandler() {
-        JDABuilder BOT = JDABuilder.createDefault(ConfigHandler.getBotConfig("com.discord.token"));
+        JDABuilder BOT = JDABuilder.createDefault(ConfigHandler.getBotConfig("discord.token"));
         BOT.addEventListeners(this);
         try {
             channel = BOT.build().
                     awaitReady().
-                    getTextChannelById(ConfigHandler.getBotConfig("com.discord.channel.id"));
+                    getTextChannelById(ConfigHandler.getBotConfig("discord.channel.id"));
             LOGGER.info("Successfully logged into Discord.");
         } catch (LoginException | InterruptedException e) {
             LOGGER.error("UNABLE TO LOGIN.");
