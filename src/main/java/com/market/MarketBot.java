@@ -248,20 +248,16 @@ public class MarketBot {
             try {
                 String JSON_DATA = apiClient.makeAPICall(url);
                 JSONObject data = new JSONObject(JSON_DATA);
-                for (Iterator it = data.keys(); it.hasNext(); ) {
-                    String key = (String) it.next();
-                    if (key.equals("price")) {
-                        coinValue = data.getDouble(key);
-                        if (coinValuePaid == 0) { //just bought this
-                            coinValuePaid = coinValue;
-                            numCoinsHeld = accountVal / coinValue;
-                            trailingStopValue = (coinValue - ((trailingPercentBase / 100.0) * coinValue));
-                        }
-                        accountVal = numCoinsHeld * coinValue;
-                        coinPercentChange = ((100 / coinValuePaid) * coinValue) - 100;
-                        break;
-                    }
+
+                coinValue = data.getDouble("price");
+                if (coinValuePaid == 0) { //just bought this
+                    coinValuePaid = coinValue;
+                    numCoinsHeld = accountVal / coinValue;
+                    trailingStopValue = (coinValue - ((trailingPercentBase / 100.0) * coinValue));
                 }
+                accountVal = numCoinsHeld * coinValue;
+                coinPercentChange = ((100 / coinValuePaid) * coinValue) - 100;
+
                 if (coinValue > coinValuePeak) {
                     coinValuePeak = coinValue;
                     trailingPercent = trailingPercentBase;
