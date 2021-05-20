@@ -123,23 +123,6 @@ public class MarketDataHandler {
         } else {
             updateCtr--;
         }
-
-/*        String d = LocalDateTime.now().format(Constants.shortDateFormat);
-        StringBuilder msg = new StringBuilder("[" + d + "] Status update: (MP: " + Constants.decimalFormat.format(marketPerformance) + "%)\n```");
-        for (MarketBot s : bots) {
-            msg.append("\n");
-            if (s.getCoinSymbol().equals("")) {
-                msg.append("[").append(s.getName()).append("] ").append("Searching...");
-            } else {
-                msg.append("[").append(s.getName()).append("] ")
-                        .append(s.getCoinSymbol())
-                        .append(" ")
-                        .append(Constants.decimalFormat.format(s.getCoinValue()))
-                        .append(" (").append(Constants.decimalFormat.format(s.getCoinPercentChange())).append("%)");
-            }
-        }
-        msg.append("```");
-        BotRunner.UPDATER.sendUpdateMsg(msg.toString());*/
     }
 
     public List<Candlestick> getKlineData(String symbol, String interval, int daysAgoStart, int daysAgoEnd) {

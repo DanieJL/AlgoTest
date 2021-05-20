@@ -107,9 +107,7 @@ public class BotRunner {
         for (MarketBot marketBot : MARKETBots) {
             marketBot.resetBot();
         }
-        String st = " file [" + backtestFile + "]";
-        if(!backtestFromFile) {st=" the last " + backtestDateDeltaInDays + " days";}
-        UPDATER.sendUpdateMsg("Backtesting" +st + "...\nPlease do not send commands until completion confirmed.");
+        UPDATER.sendUpdateMsg("Backtesting [" + backtestFile + "]...\nPlease do not send commands until completion confirmed.");
 
         KlineDatapack klineData = null;
         ObjectMapper objectMapper = new ObjectMapper();
