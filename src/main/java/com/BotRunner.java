@@ -6,6 +6,7 @@ import com.enums.KlineInterval;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.market.MarketBot;
 import com.market.MarketDataHandler;
+import com.market.MultithreadBotRunner;
 import com.models.Candlestick;
 import com.models.KlineDatapack;
 import org.apache.log4j.Logger;
@@ -26,31 +27,32 @@ public class BotRunner {
 
     private static boolean pauseMarket = false;
     private static final boolean backtest = true;
-    private static final boolean backtestFromFile = true;
     private static final String backtestFile = "5_17_2021_data.json";
-    private static final int backtestDateDeltaInDays = 30;
+    private static final boolean createFile = false;
 
     private static boolean busy = false;
-    private static final KlineInterval backtestInterval = KlineInterval.ONE_MINUTE;
+    private static final boolean multithread = false; //Only applies to backtesting
 
     public static void main(String[] args) {
-
-        MarketDataHandler marketDataHandler = new MarketDataHandler();
-
-        //Uncomment this and run to generate a new backtesting datafile.
-//        marketDataHandler.generateBacktestDataFile(backtestFile,
-//                365,
-//                0,
-//                KlineInterval.ONE_MINUTE);
-//        System.exit(0);
+        if (createFile) {
+            new MarketDataHandler().generateBacktestDataFile(backtestFile,
+                    365,
+                    0,
+                    KlineInterval.ONE_MINUTE);
+            System.exit(0);
+        }
 
         if (isBacktest()) {
-            backtestRun(marketDataHandler);
+            long startTime = System.nanoTime();
+            backtestRun();
+            long endTime = System.nanoTime();
+            long duration = (endTime - startTime) / 1000000;
+            UPDATER.sendUpdateMsg("Took " + duration + "ms to execute.");
         } else {
             new Timer().schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    realTimeRun(marketDataHandler);
+                    realTimeRun();
                 }
             }, 0, 1000L * Constants.CYCLE_TIME);
         }
@@ -88,7 +90,8 @@ public class BotRunner {
         return marketBotBots;
     }
 
-    private static void realTimeRun(MarketDataHandler marketDataHandler) {
+    private static void realTimeRun() {
+        MarketDataHandler marketDataHandler = new MarketDataHandler();
         if (!pauseMarket) {
             KlineDatapack klineData = marketDataHandler.getKlineData(0, 0);
             marketDataHandler.setMarketPerformance(klineData, Constants.mpCalcRange);
@@ -99,7 +102,7 @@ public class BotRunner {
         }
     }
 
-    private static void backtestRun(MarketDataHandler marketDataHandler) {
+    public static void backtestRun() {
         busy = true;
         for (MarketBot marketBot : MARKETBots) {
             marketBot.resetBot();
@@ -107,32 +110,38 @@ public class BotRunner {
         UPDATER.sendUpdateMsg("Backtest in progress.. Please do not send commands until completion confirmed.");
 
         KlineDatapack klineData = null;
-        if (backtestFromFile) {
-            ObjectMapper objectMapper = new ObjectMapper();
-            try {
-                klineData = objectMapper.readValue(new File(new File("backtestData"), backtestFile),
-                        KlineDatapack.class);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } else {
-            klineData = marketDataHandler.getBacktestData(backtestDateDeltaInDays, 0, backtestInterval);
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            klineData = objectMapper.readValue(new File(new File("backtestData"), backtestFile),
+                    KlineDatapack.class);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
-        KlineDatapack intervalKeeperPack = new KlineDatapack();
-        int iterations = klineData.getKline1mData().get(MarketDataHandler.allowedTickers[0]).size();
-        for (int i = 0; i < iterations; i++) {
-            if (i % 1000 == 0) {
-                LOGGER.info("On iteration " + i + " / " + iterations);
+        if (multithread) {
+            List<MultithreadBotRunner> botThreads = new ArrayList<>();
+            for (MarketBot marketBot : MARKETBots) {
+                MarketDataHandler marketDataHandler = new MarketDataHandler();
+                botThreads.add(new MultithreadBotRunner(marketBot, klineData, marketDataHandler));
             }
-            Map<String, List<Candlestick>> incrementedData = klineData.getKline1mDataIncremented(i);
-            if (incrementedData.isEmpty()) {
-                LOGGER.info("End of backtest.");
-                break;
+            botThreads.forEach(MultithreadBotRunner::start);
+        } else {
+            MarketDataHandler marketDataHandler = new MarketDataHandler();
+            KlineDatapack intervalKeeperPack = new KlineDatapack();
+            int iterations = klineData.getKline1mData().get(MarketDataHandler.allowedTickers[0]).size();
+            for (int i = 0; i < iterations; i++) {
+                if (i % 1000 == 0) {
+                    LOGGER.info("On iteration " + i + " / " + iterations);
+                }
+                Map<String, List<Candlestick>> incrementedData = klineData.getKline1mDataIncremented(i);
+                if (incrementedData.isEmpty()) {
+                    LOGGER.info("End of backtest.");
+                    break;
+                }
+                intervalKeeperPack.setKline1mData(incrementedData);
+                marketDataHandler.setMarketPerformance(intervalKeeperPack, Constants.mpCalcRange);
+                MARKETBots.forEach(marketBot -> marketBot.runMarketBot(intervalKeeperPack));
             }
-            intervalKeeperPack.setKline1mData(incrementedData);
-            marketDataHandler.setMarketPerformance(intervalKeeperPack, Constants.mpCalcRange);
-            MARKETBots.forEach(marketBot -> marketBot.runMarketBot(intervalKeeperPack));
         }
         busy = false;
         UPDATER.sendUpdateMsg("Backtest Completed.");

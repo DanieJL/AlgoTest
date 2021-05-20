@@ -236,7 +236,7 @@ public class DiscordHandler extends ListenerAdapter {
             }
         }
         if (messageText.equals("!mp all")) {
-            StringBuilder msg = new StringBuilder("Overall com.market performance:\n```");
+            StringBuilder msg = new StringBuilder("Overall market performance:\n```");
             for (int i = 0; i < Constants.mpRanges.length; i++) {
                 if (i == 0) {
                     msg.append(">+").append(Constants.mpRanges[i])
