@@ -49,7 +49,7 @@ public class DiscordHandler extends ListenerAdapter {
         if (messageText.equals("!pause")) {
             handlePauseCommand();
         }
-        if (!BotRunner.getBusyMarket()) { //make sure these commands cannot interfere with bot, simultaneous stuff causes crash
+        if (!BotRunner.getBusyMarket()) { 
             BotRunner.MARKETBots.sort(Comparator.comparing(MarketBot::getAccountVal).reversed());
             if (messageText.contains("!sell")) {
                 handleSellCommand(messageText);
@@ -205,25 +205,28 @@ public class DiscordHandler extends ListenerAdapter {
                         }
                     }
                     for (int i = 0; i < coinPerformance.length; i++) { //this loop makes it go by avg instead of overall
-                        coinPerformance[i] = coinPerformance[i] / coinPerformanceTrades[i];
+                        coinPerformance[i] = coinPerformance[i] - (coinPerformanceTrades[i]*Constants.feePercent);
                     }
                     if (cmdSplit[1].equals("all")) {
                         for (int i = 0; i < Constants.mpRanges.length + 1; i++) {
-                            if (coinPerformance[i] > MPcurrentBestValue[i]) {
+                            if (coinPerformance[i] > MPcurrentBestValue[i] || MPcurrentBestValue[i] == 0) {
+                                MPcurrentBestName[i] = marketBot.getName();
                                 MPcurrentBestValue[i] = coinPerformance[i];
                                 MPcurrentBestTradeCount[i] = coinPerformanceTrades[i];
-                                MPcurrentBestName[i] = marketBot.getName();
+                                if(MPcurrentBestTradeCount[i]==0){
+                                    MPcurrentBestName[i] = "null";
+                                }
                             }
                         }
                     } else {
-                        StringBuilder msg = new StringBuilder(marketBot.getName() + " com.market performance:\n```");
+                        StringBuilder msg = new StringBuilder(marketBot.getName() + " market performance:\n```");
                         for (int i = 0; i < Constants.mpRanges.length; i++) {
                             if (i == 0) {
-                                msg.append(">+").append(Constants.mpRanges[i]).append("%: [").append(marketBot.getName()).append("] ").append(coinPerformanceTrades[i]).append(" trades, ").append(Constants.decimalFormat.format(coinPerformance[i])).append("%avg\n");
+                                msg.append(">+").append(Constants.mpRanges[i]).append("%: [").append(marketBot.getName()).append("] ").append(coinPerformanceTrades[i]).append(" trades, ").append(Constants.decimalFormat.format(coinPerformance[i])).append("%\n");
                             } else {
-                                msg.append(Constants.mpRanges[i]).append(" to ").append(Constants.mpRanges[i - 1]).append("%: [").append(marketBot.getName()).append("] ").append(coinPerformanceTrades[i]).append(" trades, ").append(Constants.decimalFormat.format(coinPerformance[i])).append("%avg\n");
+                                msg.append(Constants.mpRanges[i]).append(" to ").append(Constants.mpRanges[i - 1]).append("%: [").append(marketBot.getName()).append("] ").append(coinPerformanceTrades[i]).append(" trades, ").append(Constants.decimalFormat.format(coinPerformance[i])).append("%\n");
                                 if (i == Constants.mpRanges.length - 1) {
-                                    msg.append("<").append(Constants.mpRanges[i]).append("%: [").append(marketBot.getName()).append("] ").append(coinPerformanceTrades[i + 1]).append(" trades, ").append(Constants.decimalFormat.format(coinPerformance[i + 1])).append("%avg\n");
+                                    msg.append("<").append(Constants.mpRanges[i]).append("%: [").append(marketBot.getName()).append("] ").append(coinPerformanceTrades[i + 1]).append(" trades, ").append(Constants.decimalFormat.format(coinPerformance[i + 1])).append("%\n");
                                 }
                             }
                         }
@@ -236,22 +239,22 @@ public class DiscordHandler extends ListenerAdapter {
             }
         }
         if (messageText.equals("!mp all")) {
-            StringBuilder msg = new StringBuilder("Overall com.market performance:\n```");
+            StringBuilder msg = new StringBuilder("Overall market performance:\n```");
             for (int i = 0; i < Constants.mpRanges.length; i++) {
                 if (i == 0) {
                     msg.append(">+").append(Constants.mpRanges[i])
                             .append("%: [").append(MPcurrentBestName[i]).append("] ")
                             .append(MPcurrentBestTradeCount[i]).append(" trades, ")
-                            .append(Constants.decimalFormat.format(MPcurrentBestValue[i])).append("%avg\n");
+                            .append(Constants.decimalFormat.format(MPcurrentBestValue[i])).append("%\n");
                 } else {
                     msg.append(Constants.mpRanges[i]).append(" to ").append(Constants.mpRanges[i - 1])
                             .append("%: [").append(MPcurrentBestName[i]).append("] ")
                             .append(MPcurrentBestTradeCount[i]).append(" trades, ")
-                            .append(Constants.decimalFormat.format(MPcurrentBestValue[i])).append("%avg\n");
+                            .append(Constants.decimalFormat.format(MPcurrentBestValue[i])).append("%\n");
                     if (i == Constants.mpRanges.length - 1) {
                         msg.append("<").append(Constants.mpRanges[i]).append("%: [").append(MPcurrentBestName[i + 1]).append("] ")
                                 .append(MPcurrentBestTradeCount[i + 1]).append(" trades, ")
-                                .append(Constants.decimalFormat.format(MPcurrentBestValue[i + 1])).append("%avg\n");
+                                .append(Constants.decimalFormat.format(MPcurrentBestValue[i + 1])).append("%\n");
                     }
                 }
             }

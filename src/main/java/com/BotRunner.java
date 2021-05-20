@@ -104,7 +104,9 @@ public class BotRunner {
         for (MarketBot marketBot : MARKETBots) {
             marketBot.resetBot();
         }
-        UPDATER.sendUpdateMsg("Backtest in progress.. Please do not send commands until completion confirmed.");
+        String st = " file [" + backtestFile + "]";
+        if(!backtestFromFile) {st=" the last " + backtestDateDeltaInDays + " days";}
+        UPDATER.sendUpdateMsg("Backtesting" +st + "...\nPlease do not send commands until completion confirmed.");
 
         KlineDatapack klineData = null;
         if (backtestFromFile) {

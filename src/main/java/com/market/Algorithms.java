@@ -77,7 +77,7 @@ public class Algorithms {
         return "";
     }
 
-    public String lowRSIanyFib(int maxRSI, double fibRange, double volumeMin) {
+    public String lowRSIanyFib(int maxRSI, double fibRange, double volumeMinAVG) {
         double best = 999;
         String bestTicker = "";
         for (String ticker : MarketDataHandler.allowedTickers) {
@@ -93,7 +93,7 @@ public class Algorithms {
             double volume = MarketUtil.getUSDVolumeAvg(klineData, 6);
             double rsi = (rsiData[rsiData.length - 1]);
 
-            if (rsi < maxRSI && volume > volumeMin) {
+            if (rsi < maxRSI && volume > volumeMinAVG) {
                 double[] fibs = marketUtil.calculateKeyFibRetracements(cStickDataForFIB);
                 double lastClose = cStickDataForFIB.get(cStickDataForFIB.size() - 1).getClose();
                 for (double d : fibs) {
@@ -110,7 +110,7 @@ public class Algorithms {
         return bestTicker;
     }
 
-    public String RSI_MACD_PER(int MACD_RSImax, int rsiRange, int maRangeSmall, int maRangeBig, int percentRange1, double percentMin1, int percentRange2, double percentMin2, int volumeRange, double volumeUSDMin) {
+    public String RSI_MACD_PER(int MACD_RSImax, int rsiRange, int maRangeSmall, int maRangeBig, int percentRange1, double percentMin1, int percentRange2, double percentMin2, int volumeRange, double volumeUSDMinAVG) {
         double best = 999;
         String bestTicker = "";
         for (String ticker : MarketDataHandler.allowedTickers) {
@@ -123,7 +123,7 @@ public class Algorithms {
             double percent2 = marketUtil.getPercentChange(klineData, percentRange2);
             double volume = MarketUtil.getUSDVolumeAvg(klineData, volumeRange);
 
-            if (percent1 > percentMin1 && percent2 > percentMin2 && volume > volumeUSDMin) {
+            if (percent1 > percentMin1 && percent2 > percentMin2 && volume > volumeUSDMinAVG) {
                 double[] rsiData = marketUtil.calculateRSIValues(klineData, rsiRange);
                 double MACD_RSI = (rsiData[rsiData.length - 1] + macd);
                 if (MACD_RSI < MACD_RSImax && MACD_RSI < best) {

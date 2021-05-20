@@ -124,7 +124,7 @@ public class MarketDataHandler {
             updateCtr--;
         }
 
-        String d = LocalDateTime.now().format(Constants.shortDateFormat);
+/*        String d = LocalDateTime.now().format(Constants.shortDateFormat);
         StringBuilder msg = new StringBuilder("[" + d + "] Status update: (MP: " + Constants.decimalFormat.format(marketPerformance) + "%)\n```");
         for (MarketBot s : bots) {
             msg.append("\n");
@@ -139,7 +139,7 @@ public class MarketDataHandler {
             }
         }
         msg.append("```");
-        BotRunner.UPDATER.sendUpdateMsg(msg.toString());
+        BotRunner.UPDATER.sendUpdateMsg(msg.toString());*/
     }
 
     public List<Candlestick> getKlineData(String symbol, String interval, int daysAgoStart, int daysAgoEnd) {
