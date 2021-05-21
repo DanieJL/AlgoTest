@@ -49,10 +49,12 @@ public class DiscordHandler extends ListenerAdapter {
         if (messageText.equals("!pause")) {
             handlePauseCommand();
         }
-        if (!BotRunner.getBusyMarket()) { 
+        if (!BotRunner.getBusyMarket()) {
             BotRunner.MARKETBots.sort(Comparator.comparing(MarketBot::getAccountVal).reversed());
             if (messageText.contains("!sell")) {
                 handleSellCommand(messageText);
+            } else if (messageText.contains("!keeptop")) {
+                handleKeepCommand(messageText);
             } else if (messageText.equals("!data")) {
                 handleDataCommand();
             } else if (messageText.contains("!reset")) {
@@ -85,6 +87,32 @@ public class DiscordHandler extends ListenerAdapter {
             }
         } else {
             this.channel.sendMessage("Please wait for current cycle to finish.").queue();
+        }
+    }
+
+    private void handleKeepCommand(String messageText) {
+        String[] cmdSplit = messageText.split(" ", 3);
+        int top = 0;
+        if (cmdSplit.length > 1) {
+            try {
+                top = Integer.parseInt(cmdSplit[1]);
+            } catch (NumberFormatException e) {
+                LOGGER.error(e);
+            }
+        }
+        if (top == 0 || top > BotRunner.MARKETBots.size()) {
+            return;
+        }
+        for (int i = 0; i < BotRunner.MARKETBots.size(); i++) {
+            if (i > (top - 1)) {
+                File file = new File("sellLogs", BotRunner.MARKETBots.get(i).getName() + "_sellLog.txt");
+                if (file.delete()) {
+                    this.channel.sendMessage("Deleted " + BotRunner.MARKETBots.get(i).getName()).queue();
+                }
+                else {
+                    this.channel.sendMessage("Failed to delete " + BotRunner.MARKETBots.get(i).getName()).queue();
+                }
+            }
         }
     }
 
@@ -205,17 +233,14 @@ public class DiscordHandler extends ListenerAdapter {
                         }
                     }
                     for (int i = 0; i < coinPerformance.length; i++) { //this loop makes it go by avg instead of overall
-                        coinPerformance[i] = coinPerformance[i] - (coinPerformanceTrades[i]*Constants.feePercent);
+                        coinPerformance[i] = coinPerformance[i] - (coinPerformanceTrades[i] * Constants.feePercent);
                     }
                     if (cmdSplit[1].equals("all")) {
                         for (int i = 0; i < Constants.mpRanges.length + 1; i++) {
-                            if (coinPerformance[i] > MPcurrentBestValue[i] || MPcurrentBestValue[i] == 0) {
+                            if (coinPerformance[i] > MPcurrentBestValue[i]) {
                                 MPcurrentBestName[i] = marketBot.getName();
                                 MPcurrentBestValue[i] = coinPerformance[i];
                                 MPcurrentBestTradeCount[i] = coinPerformanceTrades[i];
-                                if(MPcurrentBestTradeCount[i]==0){
-                                    MPcurrentBestName[i] = "null";
-                                }
                             }
                         }
                     } else {
