@@ -2,8 +2,8 @@ package com;
 
 import com.constants.Constants;
 import com.discord.DiscordHandler;
-import com.enums.KlineInterval;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.market.Demo;
 import com.market.MarketBot;
 import com.market.MarketDataHandler;
 import com.market.MultithreadBotRunner;
@@ -18,33 +18,38 @@ import org.json.simple.parser.ParseException;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class BotRunner {
     public static final DiscordHandler UPDATER = new DiscordHandler();
     public static final List<MarketBot> MARKETBots = createBotsList();
     private final static Logger LOGGER = Logger.getLogger(BotRunner.class);
 
-    private static boolean pauseMarket = false;
+    private static boolean pauseMarket = true;
     private static final boolean backtest = true;
-    private static final String backtestFile = "5_17_2021_data.json";
-    private static final boolean createFile = false;
+    private static final String backtestFile = "T1_5-7-21to5-14-21.json";
+    public static final boolean createFile = false;
 
     private static boolean busy = false;
     private static final boolean multithread = false; //Only applies to backtesting
 
     public static void main(String[] args) {
-        if (createFile) {
+        new Demo();
+/*        if (createFile) {
+            UPDATER.sendUpdateMsg("CREATING: [" + backtestFile + "]");
             new MarketDataHandler().generateBacktestDataFile(backtestFile,
-                    365,
-                    0,
+                    41,
+                    34,
                     KlineInterval.ONE_MINUTE);
+            UPDATER.sendUpdateMsg("FINISHED: [" + backtestFile + "]");
             System.exit(0);
         }
 
         if (isBacktest()) {
             long startTime = System.nanoTime();
-            backtestRun();
+            backtestRun(backtestFile);
             long endTime = System.nanoTime();
             long duration = (endTime - startTime) / 1000000;
             UPDATER.sendUpdateMsg("Took " + duration + "ms to execute.");
@@ -55,7 +60,7 @@ public class BotRunner {
                     realTimeRun();
                 }
             }, 0, 1000L * Constants.CYCLE_TIME);
-        }
+        }*/
     }
 
     public static boolean isBacktest() {
@@ -82,7 +87,7 @@ public class BotRunner {
             marketJsonArr.forEach(m -> {
                 JSONObject market = (JSONObject) m;
                 marketBotBots.add(new MarketBot(market.get("name").toString()));
-                UPDATER.sendUpdateMsg(market.get("name").toString() + " Started.");
+                if(!BotRunner.createFile) {UPDATER.sendUpdateMsg(market.get("name").toString() + " Started.");};
             });
         } catch (IOException | ParseException e) {
             e.printStackTrace();
@@ -102,17 +107,17 @@ public class BotRunner {
         }
     }
 
-    public static void backtestRun() {
+    public static void backtestRun(String file) {
         busy = true;
         for (MarketBot marketBot : MARKETBots) {
             marketBot.resetBot();
         }
-        UPDATER.sendUpdateMsg("Backtesting [" + backtestFile + "]...\nPlease do not send commands until completion confirmed.");
+        UPDATER.sendUpdateMsg("Backtesting [" + file + "]...\nPlease do not send commands until completion confirmed.");
 
         KlineDatapack klineData = null;
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            klineData = objectMapper.readValue(new File(new File("backtestData"), backtestFile),
+            klineData = objectMapper.readValue(new File(new File("backtestData"), file),
                     KlineDatapack.class);
         } catch (IOException e) {
             e.printStackTrace();

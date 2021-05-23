@@ -106,14 +106,10 @@ public class DiscordHandler extends ListenerAdapter {
         for (int i = 0; i < BotRunner.MARKETBots.size(); i++) {
             if (i > (top - 1)) {
                 File file = new File("sellLogs", BotRunner.MARKETBots.get(i).getName() + "_sellLog.txt");
-                if (file.delete()) {
-                    this.channel.sendMessage("Deleted " + BotRunner.MARKETBots.get(i).getName()).queue();
-                }
-                else {
-                    this.channel.sendMessage("Failed to delete " + BotRunner.MARKETBots.get(i).getName()).queue();
-                }
+                file.delete();
             }
         }
+        this.channel.sendMessage("Deleted all but top " + top + ".").queue();
     }
 
     private void handleSellCommand(String messageText) {
@@ -174,6 +170,7 @@ public class DiscordHandler extends ListenerAdapter {
                         + posCount + " positive trades: " + Constants.decimalFormat.format(posAvg) + "%/avg\n"
                         + negCount + " negative trades: " + Constants.decimalFormat.format(negAvg) + "%/avg";
                 this.channel.sendMessage("```[" + marketBot.getName() + "]\n" + data + "```").queue();
+                br.close();
             } catch (IOException e) {
                 this.channel.sendMessage("```[" + marketBot.getName() + "] No sales completed by this bot.```").queue();
             }
@@ -258,6 +255,7 @@ public class DiscordHandler extends ListenerAdapter {
                         msg.append("```");
                         this.channel.sendMessage(msg.toString()).queue();
                     }
+                    br.close();
                 } catch (IOException e) {
                     LOGGER.error("Error reading sell log.");
                 }

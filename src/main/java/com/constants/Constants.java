@@ -13,6 +13,6 @@ public class Constants {
     public static final double[] mpRanges = {11, 8, 5, 3, 2, 1, 0, -1, -2, -3, -5, -8, -11}; //needs to be ordered greater to lesser
     public static final int mpCalcRange = 120;      //how many klines to use to calculate com.market performance
     public static final String botListFileName = "src/main/resources/BotList.json";
-    public static final String[] godBotAlgos = {"null", "Fib618ANDRSILT30", "RSILT30CheckOnly", "Fib618CheckOnly", "Fib618CheckOnly", "RSILT30CheckOnly", "null", "Fib618ANDRSILT30", "Fib618CheckOnly", "null", "null", "null", "Fib618ANDRSILT30", "Fib618ANDRSILT30"};
+    public static String[] godBotAlgos = {"null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null", "null"};
 
 }

@@ -102,7 +102,7 @@ public class MarketDataHandler {
     }
 
     public void handleUpdates(List<MarketBot> bots) {
-        if (updateCtr <= 1) {
+        if (updateCtr < 1) {
             String d = LocalDateTime.now().format(Constants.shortDateFormat);
             StringBuilder msg = new StringBuilder("[" + d + "] Status update: (MP: " + Constants.decimalFormat.format(marketPerformance) + "%)\n```");
             for (MarketBot s : bots) {

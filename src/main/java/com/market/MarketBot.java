@@ -39,7 +39,7 @@ public class MarketBot {
     private String algoName = "default";
     private double numCoinsHeld = 0;
     private double accountVal = 1000;
-    private double marketPerformance = 0;  //the overall com.market performance at time of last purchase
+    private double marketPerformance = 0;  //the overall market performance at time of last purchase
 
     private KlineDatapack klineDatapack;
 

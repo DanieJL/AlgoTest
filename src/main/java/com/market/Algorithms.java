@@ -31,6 +31,8 @@ public class Algorithms {
         return "";
     }
 
+    public String dontBuy() {return "";}
+
     public String fib618() {
         for (String ticker : MarketDataHandler.allowedTickers) {
             List<Candlestick> klineData = this.klineData.getKline1mData().get(ticker);
