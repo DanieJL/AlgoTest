@@ -26,7 +26,8 @@ public class MultithreadBotRunner implements Runnable {
     public void run() {
         KlineDatapack intervalKeeperPack = new KlineDatapack();
         int iterations = klineData.getKline1mData().get(MarketDataHandler.allowedTickers[0]).size();
-        for (int i = 0; i < iterations; i++) {
+        //for (int i = 0; i < iterations; i++) {
+        for (int i = (iterations - (Demo.testStartDaysBack*1440)); i < (iterations - (Demo.testEndDaysBack*1440)); i++) {
             if (i % 1000 == 0) {
                 LOGGER.info("Thread " + marketBot.getName());
                 LOGGER.info("On iteration " + i + " / " + iterations);

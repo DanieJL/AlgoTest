@@ -2,64 +2,59 @@ package com.market;
 
 import com.BotRunner;
 import com.constants.Constants;
-import com.enums.KlineInterval;
+import com.util.GeneralUtil;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Comparator;
+
+import static com.BotRunner.MARKETBots;
 
 public class Demo {
     private final static Logger LOGGER = Logger.getLogger(BotRunner.class);
-    private int dataLength = 30;
-    private int testLength = 7;
-    private int testStartDaysBack = 10;
-    private int numberOfTests = 3;
+    private static final int numberOfTests = 3;
+    private static final int dataLength = 30;
+    private static final int testLength = 7;
+    private static final int startDaysBack = 10;
 
-    private String[] topDefaultAlgos;
-    private String[] top5optimizedAlgos;
-    private String[] top3optimizedAlgos;
+    public static int testStartDaysBack = 0;
+    public static int testEndDaysBack = 0;
+
+
 
     public Demo(){
+        BotRunner.UPDATER.sendUpdateMsg("<<DEMO BACKTEST STARTED FOR " + numberOfTests + " CYCLES>>");
+        BotRunner.UPDATER.sendUpdateMsg("Using " + dataLength + " days of data to test following " + testLength+ " days.");
+        double[] topDefaultPerf = new double[numberOfTests];
+
         for(int i = 0; i<numberOfTests;i++){
-            int increment = testLength*i;
-            String dateFileName = "D" + i;
-            new MarketDataHandler().generateBacktestDataFile(dateFileName, (testStartDaysBack-dataLength)-increment, (testStartDaysBack)-increment, KlineInterval.ONE_MINUTE);
-            String testFileName = "T" + i;
-            new MarketDataHandler().generateBacktestDataFile(testFileName, (testStartDaysBack)-increment, (testStartDaysBack+testLength)-increment, KlineInterval.ONE_MINUTE);
-
-            BotRunner.backtestRun(dateFileName);
-            topDefaultAlgos = getGodAlgos();
-            getTopXAlgos(5);
-            top5optimizedAlgos = getGodAlgos();
-            getTopXAlgos(3);
-            top3optimizedAlgos = getGodAlgos();
-
-            Constants.godBotAlgos = topDefaultAlgos;
-            BotRunner.backtestRun(testFileName);
-            for(MarketBot m : BotRunner.MARKETBots){
+            int increment = i*testLength;
+            testStartDaysBack = startDaysBack + increment + dataLength;
+            testEndDaysBack = startDaysBack + increment;
+            BotRunner.backtestRun();
+            GeneralUtil.waitSeconds(300);
+            Constants.godBotAlgos = getGodAlgos();
+            //BotRunner.UPDATER.sendUpdateMsg(Arrays.toString(Constants.godBotAlgos));
+            testStartDaysBack = startDaysBack + increment;
+            testEndDaysBack = startDaysBack + increment - testLength;
+            BotRunner.backtestRun();
+            GeneralUtil.waitSeconds(60);
+            for(MarketBot m : MARKETBots){
                 if(m.getName().equals("godBot")){
-                    BotRunner.UPDATER.sendUpdateMsg("godBot test "+ i +" (default): " + (((m.getAccountVal()/1000)*100)-100) + "%");
+                    topDefaultPerf[i] = ((m.getAccountVal()*.1)-100);
+                    BotRunner.UPDATER.sendUpdateMsg("[CYCLE "+ (i+1) + "] Default: " + Double.toString(topDefaultPerf[i]) + "%");
                 }
                 m.resetBot();
-            }
-            Constants.godBotAlgos = top5optimizedAlgos;
-            BotRunner.backtestRun(testFileName);
-            for(MarketBot m : BotRunner.MARKETBots){
-                if(m.getName().equals("godBot")){
-                    BotRunner.UPDATER.sendUpdateMsg("godBot test "+ i +" (top 5): " + (((m.getAccountVal()/1000)*100)-100) + "%");
-                }
-                m.resetBot();
-            }
-            Constants.godBotAlgos = top3optimizedAlgos;
-            BotRunner.backtestRun(testFileName);
-            for(MarketBot m : BotRunner.MARKETBots){
-                if(m.getName().equals("godBot")){
-                    BotRunner.UPDATER.sendUpdateMsg("godBot test "+ i +" (top 3): " + (((m.getAccountVal()/1000)*100)-100) + "%");
-                }
             }
         }
+        double defAvg = 0;
+        for(int i = 0; i<topDefaultPerf.length;i++) {defAvg += topDefaultPerf[i]; defAvg = defAvg/topDefaultPerf.length;}
+        BotRunner.UPDATER.sendUpdateMsg("<<DEMO BACKTEST COMPLETE>>");
+        BotRunner.UPDATER.sendUpdateMsg("Default godBot: ("+ defAvg +"/avg) " + Arrays.toString(topDefaultPerf));
     }
 
 
@@ -67,7 +62,7 @@ public class Demo {
         String[] MPcurrentBestName = new String[Constants.mpRanges.length + 1];                    //the current best performers in each range
         double[] MPcurrentBestValue = new double[Constants.mpRanges.length + 1];
         int[] MPcurrentBestTradeCount = new int[Constants.mpRanges.length + 1];
-        for (MarketBot marketBot : BotRunner.MARKETBots) {
+        for (MarketBot marketBot : MARKETBots) {
             try {
                 File dir = new File("sellLogs");
                 dir.mkdir();
@@ -115,7 +110,7 @@ public class Demo {
                 LOGGER.error("Error reading sell log.");
             }
         }
-        StringBuilder msg = new StringBuilder("Overall market performance:\n```");
+/*        StringBuilder msg = new StringBuilder("Overall market performance:\n```");
         for (int i = 0; i < Constants.mpRanges.length; i++) {
             if (i == 0) {
                 msg.append(">+").append(Constants.mpRanges[i])
@@ -142,20 +137,21 @@ public class Demo {
             }
         }
         msg.append("};");
-        BotRunner.UPDATER.sendUpdateMsg(msg.toString());
+        BotRunner.UPDATER.sendUpdateMsg(msg.toString());*/
         return MPcurrentBestName;
     }
 
     private void getTopXAlgos(int howMany){
-        if (howMany == 0 || howMany > BotRunner.MARKETBots.size()) {
+        BotRunner.MARKETBots.sort(Comparator.comparing(MarketBot::getAccountVal).reversed());
+        if (howMany == 0 || howMany > MARKETBots.size()) {
             return;
         }
-        for (int i = 0; i < BotRunner.MARKETBots.size(); i++) {
+        for (int i = 0; i < MARKETBots.size(); i++) {
             if (i > (howMany - 1)) {
-                File file = new File("sellLogs", BotRunner.MARKETBots.get(i).getName() + "_sellLog.txt");
+                File file = new File("sellLogs", MARKETBots.get(i).getName() + "_sellLog.txt");
                 file.delete();
             }
         }
-        BotRunner.UPDATER.sendUpdateMsg("Deleted all but top " + howMany + ".");
+        //BotRunner.UPDATER.sendUpdateMsg("Deleted all but top " + howMany + ".");
     }
 }

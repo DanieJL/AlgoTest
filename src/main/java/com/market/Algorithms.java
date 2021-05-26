@@ -23,7 +23,7 @@ public class Algorithms {
             List<Candlestick> klineData = this.klineData.getKline1mData().get(ticker);
             if (klineData == null || klineData.isEmpty())
                 continue;
-            double[] rsiData = marketUtil.calculateRSIValues(klineData, 14);
+            double[] rsiData = marketUtil.calculateRSIValues(klineData, 30);
             if (rsiData[rsiData.length - 1] < 30) {
                 return ticker;
             }
@@ -64,7 +64,7 @@ public class Algorithms {
                     .filter(stick -> stick.getOpenTime() >= klineData.get(klineData.size() - 1).getClose() - (60000 * 300))
                     .collect(Collectors.toList());
 
-            double[] rsiData = marketUtil.calculateRSIValues(klineData, 14);
+            double[] rsiData = marketUtil.calculateRSIValues(klineData, 30);
             if (rsiData[rsiData.length - 1] < 30) {
                 double[] fibs = marketUtil.calculateKeyFibRetracements(cStickDataForFIB);
                 double fib618 = fibs[2];

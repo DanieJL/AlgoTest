@@ -1,55 +1,291 @@
 [
-    {
-        "name": "Fib618CheckOnly",
-        "algoName": "fib",
-        "persist": {
-            "lastTicker": "temporary",
-            "currentPaid": 44.1919,
-            "numCoinsHeld": 22.611609819899122,
-            "trailingPercent": 2.699561684381077,
-            "accountVal": 1228.7555785109942,
-            "currentTicker": "SOLUSD",
-            "marketPerformance": -5.845439978051554,
-            "currentPeak": 54.3541,
-            "currentValue": 54.3418,
-            "trailingStop": 52.886777542509826,
-            "currentPerChange": 22.967783688866064
-        }
-    },
-    {
-        "name": "RSILT30CheckOnly",
-        "persist": {
-            "lastTicker": "temporary",
-            "currentPaid": 1.0453,
-            "numCoinsHeld": 955.9456615325745,
-            "trailingPercent": 0.9347747058260794,
-            "accountVal": 1052.687362479671,
-            "currentTicker": "BATUSD",
-            "marketPerformance": -5.845439978051554,
-            "currentPeak": 1.1012,
-            "currentValue": 1.1012,
-            "trailingStop": 1.090906260939443,
-            "currentPerChange": 5.3477470582607936
-        }
-    },
-    {
-        "name": "Fib618ANDRSILT30",
-        "algoName": "rsiAndFib",
-        "persist": {
-            "lastTicker": "temporary",
-            "currentPaid": 4414.7362,
-            "numCoinsHeld": 0.22634421508583003,
-            "trailingPercent": 1.2550300242175283,
-            "accountVal": 1084.6888751699364,
-            "currentTicker": "MKRUSD",
-            "marketPerformance": -4.761233528055158,
-            "currentPeak": 4792.2094,
-            "currentValue": 4792.2094,
-            "trailingStop": 4732.065733206625,
-            "currentPerChange": 8.550300242175283
-        }
-    },
-    {
-        "name": "godBot"
+  {
+    "name": "godBot",
+    "algoName": "MACD_RSI_130A",
+    "persist": {
+      "lastTicker": "temporary",
+      "currentPaid": 0,
+      "numCoinsHeld": 0,
+      "trailingPercent": 2,
+      "accountVal": 1000,
+      "currentTicker": "",
+      "marketPerformance": 0,
+      "currentPeak": 0,
+      "currentValue": 0,
+      "trailingStop": 0,
+      "currentPerChange": 0
     }
+  },
+  {
+    "name": "MACD_RSI_130A",
+    "algoName": "MACD_RSI_130A",
+    "persist": {
+      "lastTicker": "temporary",
+      "currentPaid": 0,
+      "numCoinsHeld": 0,
+      "trailingPercent": 2,
+      "accountVal": 1000,
+      "currentTicker": "",
+      "marketPerformance": 0,
+      "currentPeak": 0,
+      "currentValue": 0,
+      "trailingStop": 0,
+      "currentPerChange": 0
+    }
+  },
+  {
+    "name": "MACD_RSI_130B",
+    "algoName": "MACD_RSI_130B",
+    "persist": {
+      "lastTicker": "temporary",
+      "currentPaid": 0,
+      "numCoinsHeld": 0,
+      "trailingPercent": 2,
+      "accountVal": 1000,
+      "currentTicker": "",
+      "marketPerformance": 0,
+      "currentPeak": 0,
+      "currentValue": 0,
+      "trailingStop": 0,
+      "currentPerChange": 0
+    }
+  },
+  {
+    "name": "MACD_RSI_130C",
+    "algoName": "MACD_RSI_130C",
+    "persist": {
+      "lastTicker": "VETUSD",
+      "currentPaid": 0.6301,
+      "numCoinsHeld": 1515.0594506565624,
+      "trailingPercent": 2,
+      "accountVal": 957.9720906501443,
+      "currentTicker": "XLMUSD",
+      "marketPerformance": -4.640907355461715,
+      "currentPeak": 0.6323,
+      "currentValue": 0.6323,
+      "trailingStop": 0.6196539999999999,
+      "currentPerChange": 0.34915092842405215
+    }
+  },
+  {
+    "name": "MACD_RSI_130D",
+    "algoName": "MACD_RSI_130D",
+    "persist": {
+      "lastTicker": "VETUSD",
+      "currentPaid": 0.6301,
+      "numCoinsHeld": 1515.0594506565624,
+      "trailingPercent": 2,
+      "accountVal": 957.9720906501443,
+      "currentTicker": "XLMUSD",
+      "marketPerformance": -4.640907355461715,
+      "currentPeak": 0.6323,
+      "currentValue": 0.6323,
+      "trailingStop": 0.6196539999999999,
+      "currentPerChange": 0.34915092842405215
+    }
+  },
+  {
+    "name": "MACD_RSI_127A",
+    "algoName": "MACD_RSI_127A",
+    "persist": {
+      "lastTicker": "temporary",
+      "currentPaid": 0,
+      "numCoinsHeld": 0,
+      "trailingPercent": 2,
+      "accountVal": 1000,
+      "currentTicker": "",
+      "marketPerformance": 0,
+      "currentPeak": 0,
+      "currentValue": 0,
+      "trailingStop": 0,
+      "currentPerChange": 0
+    }
+  },
+  {
+    "name": "MACD_RSI_127B",
+    "algoName": "MACD_RSI_127B",
+    "persist": {
+      "lastTicker": "temporary",
+      "currentPaid": 0,
+      "numCoinsHeld": 0,
+      "trailingPercent": 2,
+      "accountVal": 1000,
+      "currentTicker": "",
+      "marketPerformance": 0,
+      "currentPeak": 0,
+      "currentValue": 0,
+      "trailingStop": 0,
+      "currentPerChange": 0
+    }
+  },
+  {
+    "name": "MACD_RSI_127C",
+    "algoName": "MACD_RSI_127C",
+    "persist": {
+      "lastTicker": "VETUSD",
+      "currentPaid": 0.6301,
+      "numCoinsHeld": 1514.0819929464612,
+      "trailingPercent": 2,
+      "accountVal": 957.3540441400474,
+      "currentTicker": "XLMUSD",
+      "marketPerformance": -4.640907355461715,
+      "currentPeak": 0.6323,
+      "currentValue": 0.6323,
+      "trailingStop": 0.6196539999999999,
+      "currentPerChange": 0.34915092842405215
+    }
+  },
+  {
+    "name": "MACD_RSI_127D",
+    "algoName": "MACD_RSI_127D",
+    "persist": {
+      "lastTicker": "DOGEUSD",
+      "currentPaid": 0.6294,
+      "numCoinsHeld": 1541.9824843756717,
+      "trailingPercent": 2,
+      "accountVal": 974.9955248707372,
+      "currentTicker": "XLMUSD",
+      "marketPerformance": -4.640907355461715,
+      "currentPeak": 0.6323,
+      "currentValue": 0.6323,
+      "trailingStop": 0.6196539999999999,
+      "currentPerChange": 0.4607562758182553
+    }
+  },
+  {
+    "name": "MACD_RSI_125A",
+    "algoName": "MACD_RSI_125A",
+    "persist": {
+      "lastTicker": "temporary",
+      "currentPaid": 0,
+      "numCoinsHeld": 0,
+      "trailingPercent": 2,
+      "accountVal": 1000,
+      "currentTicker": "",
+      "marketPerformance": 0,
+      "currentPeak": 0,
+      "currentValue": 0,
+      "trailingStop": 0,
+      "currentPerChange": 0
+    }
+  },
+  {
+    "name": "MACD_RSI_125B",
+    "algoName": "MACD_RSI_125B",
+    "persist": {
+      "lastTicker": "temporary",
+      "currentPaid": 0,
+      "numCoinsHeld": 0,
+      "trailingPercent": 2,
+      "accountVal": 1000,
+      "currentTicker": "",
+      "marketPerformance": 0,
+      "currentPeak": 0,
+      "currentValue": 0,
+      "trailingStop": 0,
+      "currentPerChange": 0
+    }
+  },
+  {
+    "name": "MACD_RSI_125C",
+    "algoName": "MACD_RSI_125C",
+    "persist": {
+      "lastTicker": "VETUSD",
+      "currentPaid": 0.6294,
+      "numCoinsHeld": 1518.619293445927,
+      "trailingPercent": 2,
+      "accountVal": 960.2229792458596,
+      "currentTicker": "XLMUSD",
+      "marketPerformance": -4.640907355461715,
+      "currentPeak": 0.6323,
+      "currentValue": 0.6323,
+      "trailingStop": 0.6196539999999999,
+      "currentPerChange": 0.4607562758182553
+    }
+  },
+  {
+    "name": "MACD_RSI_125D",
+    "algoName": "MACD_RSI_125D",
+    "persist": {
+      "lastTicker": "VETUSD",
+      "currentPaid": 0.6294,
+      "numCoinsHeld": 1521.4797397196724,
+      "trailingPercent": 2,
+      "accountVal": 962.0316394247487,
+      "currentTicker": "XLMUSD",
+      "marketPerformance": -4.640907355461715,
+      "currentPeak": 0.6323,
+      "currentValue": 0.6323,
+      "trailingStop": 0.6196539999999999,
+      "currentPerChange": 0.4607562758182553
+    }
+  },
+  {
+    "name": "MACD_RSI_122A",
+    "algoName": "MACD_RSI_122A",
+    "persist": {
+      "lastTicker": "temporary",
+      "currentPaid": 0,
+      "numCoinsHeld": 0,
+      "trailingPercent": 2,
+      "accountVal": 1000,
+      "currentTicker": "",
+      "marketPerformance": 0,
+      "currentPeak": 0,
+      "currentValue": 0,
+      "trailingStop": 0,
+      "currentPerChange": 0
+    }
+  },
+  {
+    "name": "MACD_RSI_122B",
+    "algoName": "MACD_RSI_122B",
+    "persist": {
+      "lastTicker": "temporary",
+      "currentPaid": 0,
+      "numCoinsHeld": 0,
+      "trailingPercent": 2,
+      "accountVal": 1000,
+      "currentTicker": "",
+      "marketPerformance": 0,
+      "currentPeak": 0,
+      "currentValue": 0,
+      "trailingStop": 0,
+      "currentPerChange": 0
+    }
+  },
+  {
+    "name": "MACD_RSI_122C",
+    "algoName": "MACD_RSI_122C",
+    "persist": {
+      "lastTicker": "ADAUSD",
+      "currentPaid": 0.6294,
+      "numCoinsHeld": 1526.1111328879006,
+      "trailingPercent": 2,
+      "accountVal": 964.9600693250195,
+      "currentTicker": "XLMUSD",
+      "marketPerformance": -4.640907355461715,
+      "currentPeak": 0.6323,
+      "currentValue": 0.6323,
+      "trailingStop": 0.6196539999999999,
+      "currentPerChange": 0.4607562758182553
+    }
+  },
+  {
+    "name": "MACD_RSI_122D",
+    "algoName": "MACD_RSI_122D",
+    "persist": {
+      "lastTicker": "ADAUSD",
+      "currentPaid": 0.6294,
+      "numCoinsHeld": 1525.8819411879276,
+      "trailingPercent": 2,
+      "accountVal": 964.8151514131266,
+      "currentTicker": "XLMUSD",
+      "marketPerformance": -4.640907355461715,
+      "currentPeak": 0.6323,
+      "currentValue": 0.6323,
+      "trailingStop": 0.6196539999999999,
+      "currentPerChange": 0.4607562758182553
+    }
+  }
 ]
